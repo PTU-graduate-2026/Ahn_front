@@ -158,6 +158,7 @@ export default function ScanResultScreen() {
           />
 
           <FixPlanPanel
+            fileSeq={fileSeq ?? ""}
             autoFixPlan={autoFixPlan}
             manualFixPlan={manualFixPlan}
             isDownloading={isDownloading}
