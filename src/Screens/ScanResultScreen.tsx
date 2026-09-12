@@ -3,6 +3,7 @@ import { History, Home, RotateCcw, FileDown } from "lucide-react";
 import { generatePdfReport } from "../utils/generatePdfReport";
 import { useNavigate, useParams } from "react-router-dom";
 import { ComponentTable } from "../components/scan/ComponentTable";
+import { CriticalAlertBanner } from "../components/scan/CriticalAlertBanner";
 import { FixPlanPanel } from "../components/scan/FixPlanPanel";
 import { LoadingState } from "../components/scan/LoadingState";
 import { PolicyDecisionPanel } from "../components/scan/PolicyDecisionPanel";
@@ -14,6 +15,7 @@ import { useScanResult } from "../hooks/useScanResult";
 import { scanResultStyles as styles } from "../styles/scanResult";
 import {
   countBySeverity,
+  getCriticalCount,
   getRiskStatus,
   getTopFixes,
   getVulnerableComponentCount,
@@ -48,6 +50,7 @@ export default function ScanResultScreen() {
 
   const sortedResults = useMemo(() => sortBySeverity(results), [results]);
   const counts = useMemo(() => countBySeverity(results), [results]);
+  const criticalCount = useMemo(() => getCriticalCount(counts), [counts]);
   const topFixes = useMemo(
     () => getTopFixes(sortedResults),
     [sortedResults],
@@ -134,6 +137,8 @@ export default function ScanResultScreen() {
         </section>
       ) : (
         <>
+          <CriticalAlertBanner criticalCount={criticalCount} />
+
           <RiskOverview
             riskStatus={riskStatus}
             totalResults={results.length}

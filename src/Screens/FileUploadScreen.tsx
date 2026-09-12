@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { fileUploadStyles as s } from "../styles/fileUpload";
 import FileInputBox from "../components/FileDropInput";
 // SbomApi에서 만든 uploadSbomFile 함수 가져오기
@@ -58,6 +59,14 @@ export default function FileUploadScreen() {
 
   return (
     <section style={s.container}>
+      <button
+        type="button"
+        style={s.backButton}
+        onClick={() => navigate(-1)}
+        aria-label="뒤로가기"
+      >
+        <ArrowLeft size={28} />
+      </button>
       <div style={s.content}>
         <h1 style={s.title}>보안 구성요소 분석</h1>
         <p style={s.subTitle}>

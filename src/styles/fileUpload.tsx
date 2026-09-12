@@ -2,11 +2,25 @@ import type { CSSProperties } from "react";
 
 export const fileUploadStyles: Record<string, CSSProperties> = {
   container: {
+    position: "relative",
     minHeight: "100vh",
     background: "#f4f6f9",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: "24px",
+    left: "24px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 0,
+    border: "none",
+    background: "none",
+    color: "#2d3748",
+    cursor: "pointer",
   },
   content: {
     width: "100%",

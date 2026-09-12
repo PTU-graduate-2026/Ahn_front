@@ -114,6 +114,10 @@ export const countBySeverity = (results: ScanResult[]) =>
     return acc;
   }, {});
 
+// countBySeverity 결과에서 Critical 등급 건수만 뽑아낸다. (없으면 0)
+export const getCriticalCount = (counts: Record<string, number>) =>
+  counts["Critical"] ?? 0;
+
 export const getTopFixes = (sortedResults: ScanResult[]) => {
   const map = new Map<string, ScanResult>();
   sortedResults.forEach((item) => {
