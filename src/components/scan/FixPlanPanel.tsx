@@ -1,9 +1,11 @@
-import { AlertTriangle, Download, Wrench } from "lucide-react";
-import type { ReactNode } from "react";
+import { AlertTriangle, Download, GitPullRequest, Wrench } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import type { FixPlanItem } from "../../services/_private/SbomApi";
 import { scanResultStyles as styles } from "../../styles/scanResult";
+import { GithubPrModal } from "./GithubPrModal";
 
 type FixPlanPanelProps = {
+  fileSeq: string | number;
   autoFixPlan: FixPlanItem[];
   manualFixPlan: FixPlanItem[];
   isDownloading: boolean;
@@ -11,12 +13,15 @@ type FixPlanPanelProps = {
 };
 
 export function FixPlanPanel({
+  fileSeq,
   autoFixPlan,
   manualFixPlan,
   isDownloading,
   onDownload,
 }: FixPlanPanelProps) {
+  const [isGithubModalOpen, setIsGithubModalOpen] = useState(false);
   const isDownloadDisabled = autoFixPlan.length === 0 || isDownloading;
+  const isGithubPrDisabled = autoFixPlan.length === 0;
 
   return (
     <section style={{ ...styles.panel, marginBottom: 18 }}>
@@ -28,10 +33,22 @@ export function FixPlanPanel({
             분리했습니다.
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={styles.countPill}>
             자동 {autoFixPlan.length}개 · 수동 {manualFixPlan.length}개
           </span>
+          <button
+            type="button"
+            style={{
+              ...styles.button,
+              ...(isGithubPrDisabled ? styles.disabledButton : {}),
+            }}
+            disabled={isGithubPrDisabled}
+            onClick={() => setIsGithubModalOpen(true)}
+          >
+            <GitPullRequest size={16} />
+            GitHub PR로 자동 수정 올리기
+          </button>
           <button
             type="button"
             style={{
@@ -46,6 +63,9 @@ export function FixPlanPanel({
           </button>
         </div>
       </div>
+      {isGithubModalOpen && (
+        <GithubPrModal fileSeq={fileSeq} onClose={() => setIsGithubModalOpen(false)} />
+      )}
       <div style={styles.fixPlanGrid}>
         <FixPlanColumn
           title="자동 적용 가능"
