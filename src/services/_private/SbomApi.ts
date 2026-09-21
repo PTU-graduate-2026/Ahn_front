@@ -139,8 +139,13 @@ export const getPolicyResult = async (fileSeq: string | number) => {
 };
 
 export const downloadFixedZip = async (fileSeq: string | number) => {
+  // 격리 빌드검증 워커가 실제로 npm install/mvn compile을 돌려보는 단계가 추가되면서
+  // 응답이 오래 걸릴 수 있음(워커 자체 빌드 타임아웃만 2분, npm+java 둘 다 있으면 최대 4분+).
+  // 공용 axios 기본 타임아웃(120000ms, ApiConfig.ts)보다 짧으면 백엔드가 아직 처리 중인데도
+  // 프론트가 먼저 포기하고 "만들지 못했습니다" 오류를 띄우는 문제가 있어 이 요청만 넉넉하게 늘림.
   const response = await axiosInstance.get(`/files/${fileSeq}/fixed-zip`, {
     responseType: "blob",
+    timeout: 300000,
   });
   return response;
 };
