@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import CommonStyle from "../../styles/CommonStyle";
+import { ArrowLeft, Check, CircleAlert, Eye, EyeOff } from "lucide-react";
 import { confirmPasswordReset } from "../../services/_private/PasswordReset/PasswordResetApi";
-import { isValidPassword, PASSWORD_POLICY_MESSAGE } from "../../utils/passwordPolicy";
+import {
+  getPasswordChecks,
+  isValidPassword,
+  PASSWORD_POLICY_MESSAGE,
+} from "../../utils/passwordPolicy";
+import { authStyles as s } from "../../styles/auth";
+import AuthBrandPanel from "./AuthBrandPanel";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -47,101 +53,121 @@ export default function ResetPassword() {
     }
   };
 
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: CommonStyle.colors.background,
-      fontFamily: "sans-serif",
-    },
-    card: {
-      width: "100%",
-      maxWidth: "400px",
-      padding: "50px 40px",
-      backgroundColor: CommonStyle.colors.white,
-      borderRadius: CommonStyle.Radius.card,
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
-      textAlign: "center" as const,
-    },
-    title: {
-      fontSize: "28px",
-      fontWeight: "900",
-      color: CommonStyle.colors.mainNavy,
-      marginBottom: "10px",
-    },
-    subtitle: {
-      fontSize: "14px",
-      color: CommonStyle.colors.textGray,
-      marginBottom: "30px",
-    },
-    input: {
-      width: "100%",
-      padding: "16px",
-      marginBottom: "12px",
-      backgroundColor: CommonStyle.colors.white,
-      border: `1px solid ${CommonStyle.colors.border}`,
-      borderRadius: CommonStyle.Radius.input,
-      color: CommonStyle.colors.mainNavy,
-      fontSize: "16px",
-      outline: "none",
-      boxSizing: "border-box" as const,
-    },
-    button: {
-      width: "100%",
-      padding: "16px",
-      backgroundColor: CommonStyle.colors.mainNavy,
-      color: "white",
-      border: "none",
-      borderRadius: CommonStyle.Radius.button,
-      fontSize: "16px",
-      fontWeight: "bold",
-      cursor: "pointer",
-      marginTop: "10px",
-    },
-    backLink: {
-      marginTop: "24px",
-      fontSize: "14px",
-      color: CommonStyle.colors.textGray,
-      cursor: "pointer",
-      display: "block",
-    },
-  };
+  // 화면 표시용 상태 (포커스된 입력칸, 비밀번호 보기)
+  const [focused, setFocused] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const passwordChecks = getPasswordChecks(newPassword);
+  const isConfirmTyped = confirmPassword.length > 0;
+  const isPasswordMatch = newPassword === confirmPassword;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>새 비밀번호 설정</h1>
-        <p style={styles.subtitle}>새로 사용할 비밀번호를 입력해주세요.</p>
+    <div style={s.page}>
+      <AuthBrandPanel />
 
-        <input
-          type="password"
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          style={styles.input}
-        />
-        <input
-          type="password"
-          placeholder="Confirm New Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          style={styles.input}
-        />
+      <main style={s.formSide}>
+        <div style={s.formBox}>
+          <button type="button" style={s.backLink} onClick={() => navigate("/login")}>
+            <ArrowLeft size={16} />
+            로그인으로
+          </button>
+          <h1 style={s.title}>새 비밀번호 설정</h1>
 
-        <button
-          style={{ ...styles.button, opacity: loading ? 0.6 : 1 }}
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? "변경 중..." : "비밀번호 변경"}
-        </button>
+          {!token ? (
+            // 메일 링크 없이 들어온 경우 — 입력해도 실패하니 처음부터 안내
+            <>
+              <p style={s.subtitle}>재설정 링크를 확인할 수 없습니다.</p>
+              <div style={s.resultBox}>
+                <div style={{ ...s.resultIcon, background: "#fef3c7", color: "#b45309" }}>
+                  <CircleAlert size={26} />
+                </div>
+                <div style={s.resultTitle}>유효하지 않은 링크입니다</div>
+                <p style={s.resultText}>
+                  메일로 받은 링크를 통해 들어와주세요.
+                  <br />
+                  링크가 만료되었다면 재설정 메일을 다시 요청해주세요.
+                </p>
+              </div>
+              <div style={s.buttonStack}>
+                <button type="button" style={s.submit} onClick={() => navigate("/forgot-password")}>
+                  재설정 메일 다시 요청
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p style={s.subtitle}>새로 사용할 비밀번호를 입력해주세요.</p>
+              {/* form으로 감싸서 Enter로도 제출 */}
+              <form
+                style={s.form}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+              >
+                <label style={s.field}>
+                  <span style={s.label}>새 비밀번호</span>
+                  <div style={s.inputWrap}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="영문과 숫자를 포함해 8자 이상"
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      onFocus={() => setFocused("new")}
+                      onBlur={() => setFocused(null)}
+                      style={{ ...s.input, paddingRight: 44, ...(focused === "new" ? s.inputFocus : {}) }}
+                    />
+                    <button
+                      type="button"
+                      style={s.eyeButton}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {/* 조건을 만족할 때마다 초록색으로 */}
+                  <ul style={s.checkList} aria-label="비밀번호 조건">
+                    {passwordChecks.map((check) => (
+                      <li key={check.label} style={{ ...s.checkItem, ...(check.ok ? s.hintOk : {}) }}>
+                        <Check size={13} strokeWidth={3} />
+                        {check.label}
+                      </li>
+                    ))}
+                  </ul>
+                </label>
 
-        <span style={styles.backLink} onClick={() => navigate("/login")}>
-          로그인으로 돌아가기
-        </span>
-      </div>
+                <label style={s.field}>
+                  <span style={s.label}>새 비밀번호 확인</span>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="비밀번호를 한 번 더 입력하세요"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onFocus={() => setFocused("confirm")}
+                    onBlur={() => setFocused(null)}
+                    style={{ ...s.input, ...(focused === "confirm" ? s.inputFocus : {}) }}
+                  />
+                  {isConfirmTyped && (
+                    <span style={{ ...s.hint, ...(isPasswordMatch ? s.hintOk : s.hintError) }}>
+                      {isPasswordMatch ? "비밀번호가 일치합니다." : "비밀번호가 일치하지 않습니다."}
+                    </span>
+                  )}
+                </label>
+
+                <button
+                  type="submit"
+                  style={{ ...s.submit, ...(loading ? s.submitDisabled : {}) }}
+                  disabled={loading}
+                >
+                  {loading ? "변경 중..." : "비밀번호 변경"}
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
