@@ -8,8 +8,13 @@ export const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     padding: "0 40px",
     height: "70px",
-    backgroundColor: "#eeeeee",
-    borderBottom: "1px solid #eeeeee",
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    borderBottom: "1px solid #e2e8f0",
+    // 스크롤해도 상단에 고정 (아래 섹션 위로 올라오게 zIndex)
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
+    backdropFilter: "blur(8px)",
   },
   // 2. 로고 영역 (왼쪽)
   logoSection: {
@@ -51,7 +56,7 @@ export const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif",
   },
-  // 4. 로그인 상태일 때 사용자 이름 + 드롭다운 메뉴
+  // 4. 드롭다운 메뉴 (서비스 / 로그인 상태일 때 사용자 이름)
   userMenuWrapper: {
     position: "relative", // 드롭다운 위치 기준
   },
