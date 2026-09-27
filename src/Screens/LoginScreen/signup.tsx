@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import CommonStyle from "../../styles/CommonStyle";
 import { useNavigate } from "react-router-dom"; // 이동할수 있게 해주는 hook
 import { signUpApiCall } from "../../services/_private/SignUp/SignUpApi";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE } from "../../utils/passwordPolicy";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -27,6 +28,17 @@ export default function SignUp() {
 
     if (!id || !password || !name || !email) {
       alert("모든 정보를 입력해주세요.");
+      return;
+    }
+
+    // 구글 로그인 계정(아이디 = 이메일)과 겹치지 않도록 아이디에 '@'는 쓸 수 없다
+    if (id.length < 4 || /[@\s]/.test(id)) {
+      alert("아이디는 공백과 '@' 없이 4자 이상으로 입력해주세요.");
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      alert(PASSWORD_POLICY_MESSAGE);
       return;
     }
 

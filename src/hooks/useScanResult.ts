@@ -10,6 +10,16 @@ import {
   type SbomComponent,
   type ScanResult,
 } from "../services/_private/SbomApi";
+import { getErrorMessage } from "../services/_private/ApiConfig";
+
+// Content-Disposition 헤더에서 파일명을 꺼낸다 (한글 파일명은 filename*=UTF-8''... 형식)
+const getDownloadFileName = (header?: string) => {
+  if (!header) return null;
+  const encoded = header.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encoded) return decodeURIComponent(encoded[1]);
+  const plain = header.match(/filename="?([^";]+)"?/i);
+  return plain ? plain[1] : null;
+};
 
 export const useScanResult = (fileSeq?: string) => {
   const [results, setResults] = useState<ScanResult[]>([]);
@@ -65,15 +75,20 @@ export const useScanResult = (fileSeq?: string) => {
       const blobUrl = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = `fixed-project-${fileSeq}.zip`;
+      link.download =
+        getDownloadFileName(response.headers["content-disposition"]) ?? `fixed-project-${fileSeq}.zip`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
     } catch (downloadError) {
       console.error(downloadError);
+      // 서버가 알려주는 실패 이유(ZIP 업로드가 아님, 자동 수정 대상 없음 등)를 그대로 보여준다
       alert(
-        "수정된 ZIP을 만들지 못했습니다. ZIP 파일 업로드인지, 자동 수정 가능한 npm 항목이 있는지 확인해주세요.",
+        await getErrorMessage(
+          downloadError,
+          "수정된 ZIP을 만들지 못했습니다. ZIP 파일 업로드인지, 자동 수정 가능한 항목이 있는지 확인해주세요.",
+        ),
       );
     } finally {
       setIsDownloading(false);

@@ -16,21 +16,31 @@ export default function Login() {
     }
   }, [navigation]);
 
+  // 로그인 응답에 토큰이 있으면 저장하고 대시보드로 이동
+  const completeLogin = (data: any) => {
+    if (data?.membSeq && data?.accessToken) {
+      setCurrentUser({
+        membSeq: data.membSeq,
+        membNm: data.membNm,
+        accessToken: data.accessToken,
+        expiresIn: data.expiresIn,
+      });
+      navigation("/dashboard");
+      return true;
+    }
+    return false;
+  };
+
   // 구글 로그인 콜백: GSI가 credential(ID 토큰)을 주면 백엔드로 전달
   const handleGoogleCallback = async (response: { credential: string }) => {
     try {
       const result = await googleLoginApiCall(response.credential);
-      if (result && result.success === true) {
-        const membSeq = result.data?.membSeq;
-        if (membSeq) {
-          setCurrentUser(membSeq, result.data?.membNm);
-          navigation("/dashboard");
-          return;
-        }
+      if (result && result.success === true && completeLogin(result.data)) {
+        return;
       }
       alert(result?.message || "구글 로그인에 실패했습니다.");
-    } catch (error) {
-      alert("구글 로그인 중 오류가 발생했습니다.");
+    } catch (error: any) {
+      alert(error.response?.data?.message || "구글 로그인 중 오류가 발생했습니다.");
     }
   };
 
@@ -84,19 +94,15 @@ export default function Login() {
       const result = await loginApiCall(id, password); // loginApi.ts한테 아이디 비번 가지고 서버에서 맞는지 확인해라
 
       if (result && result.success === true) {
-        const membSeq = result.data?.membSeq;
-        if (membSeq) {
-          setCurrentUser(membSeq, result.data?.membNm);
-          navigation("/dashboard");
-          return;
-        }
-        alert("로그인은 성공했지만 회원 번호를 받지 못했습니다. 백엔드 응답을 확인해주세요.");
+        if (completeLogin(result.data)) return;
+        alert("로그인은 성공했지만 로그인 토큰을 받지 못했습니다. 백엔드 응답을 확인해주세요.");
       } else {
         alert(result?.message || "로그인 정보를 확인해주세요."); // 물음표를 쓰는이유는 값이 없을떄 강제꺼짐을 방지
       }
-    } catch (error) {
-      // 보험 인터넷 끊김등의 예기치 못한 사고일때 멈추지 않게 잡기위함
-      alert("서버와 통신이 원활하지 않습니다.");
+    } catch (error: any) {
+      // 서버가 이유를 알려주면(입력값 오류, 요청 과다 등) 그대로 보여주고,
+      // 인터넷 끊김등의 예기치 못한 사고일때는 기본 문구로 안내
+      alert(error.response?.data?.message || "서버와 통신이 원활하지 않습니다.");
     }
   };
 

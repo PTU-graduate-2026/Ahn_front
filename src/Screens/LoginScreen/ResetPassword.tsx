@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CommonStyle from "../../styles/CommonStyle";
 import { confirmPasswordReset } from "../../services/_private/PasswordReset/PasswordResetApi";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE } from "../../utils/passwordPolicy";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -19,6 +20,10 @@ export default function ResetPassword() {
     }
     if (!newPassword || !confirmPassword) {
       alert("새 비밀번호를 입력해주세요.");
+      return;
+    }
+    if (!isValidPassword(newPassword)) {
+      alert(PASSWORD_POLICY_MESSAGE);
       return;
     }
     if (newPassword !== confirmPassword) {

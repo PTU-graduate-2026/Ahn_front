@@ -154,7 +154,7 @@ export default function ScanResultScreen() {
           <PolicyDecisionPanel policyResult={policyResult} />
 
           <ScanSummaryCards
-            counts={counts}
+            results={results}
             componentCount={components.length}
             vulnerableComponentCount={vulnerableComponentCount}
             findingCount={results.length}

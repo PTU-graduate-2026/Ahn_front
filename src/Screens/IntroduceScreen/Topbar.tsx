@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { styles } from "../../styles/topbar";
 import { getCurrentUserName, isLoggedIn, logout } from "../../utils/currentUser";
 
@@ -13,6 +13,7 @@ type OpenMenu = "service" | "user" | null;
 
 const Topbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   // localStorage는 바뀌어도 화면이 다시 안 그려져서 state로 들고 있음
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   // 드롭다운은 한 번에 하나만 열리도록 state 하나로 관리
@@ -36,7 +37,11 @@ const Topbar = () => {
 
   const handleLogout = () => {
     logout();
-    setLoggedIn(false); // 소개화면에 그대로 있고 메뉴만 "로그인"으로 바뀜
+    setLoggedIn(false); // 소개화면에서는 그대로 있고 메뉴만 "로그인"으로 바뀜
+    // 대시보드 등 로그인 전용 화면에서 로그아웃하면 로그인 화면으로
+    if (location.pathname !== "/" && location.pathname !== "/intro") {
+      navigate("/login");
+    }
   };
 
   // TODO: 백엔드에 회원정보 수정 API 생기면 개인정보 수정 페이지로 연결

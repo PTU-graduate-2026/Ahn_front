@@ -1,315 +1,300 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Boxes,
+  ChevronRight,
+  CircleCheck,
+  FileStack,
+  History,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+} from "lucide-react";
+import {
   DashboardSummary,
   FileHistoryItem,
   getDashboardSummary,
 } from "../services/_private/SbomApi";
-import { logout } from "../utils/currentUser";
+import Topbar from "./IntroduceScreen/Topbar";
+import { DonutChart } from "../components/charts/DonutChart";
+import { StackedBar } from "../components/charts/StackedBar";
+import { severitySeries } from "../styles/scanCharts";
+
+const font =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif";
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#f6f8fb",
+    background: "#f4f6f9",
     color: "#0f172a",
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, sans-serif",
-  },
-  topbar: {
-    height: 58,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 32px",
-    background: "#fff",
-    borderBottom: "1px solid #dfe7f2",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  },
-  brandMark: {
-    fontSize: 26,
-    lineHeight: 1,
-    fontWeight: 950,
-    color: "#1f4e8c",
-  },
-  brandText: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 2,
-  },
-  brandName: {
-    fontSize: 14,
-    fontWeight: 900,
-    color: "#1f4e8c",
-  },
-  brandSub: {
-    fontSize: 11,
-    fontWeight: 700,
-    color: "#94a3b8",
-  },
-  nav: {
-    display: "flex",
-    alignItems: "center",
-    gap: 18,
-  },
-  navItem: {
-    border: 0,
-    background: "transparent",
-    color: "#334155",
-    fontSize: 14,
-    fontWeight: 800,
-    cursor: "pointer",
+    fontFamily: font,
   },
   content: {
-    padding: "18px 32px 40px",
+    maxWidth: 1280,
+    margin: "0 auto",
+    padding: "32px 32px 56px",
+    boxSizing: "border-box",
   },
   pageHeader: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
+    flexWrap: "wrap",
     gap: 16,
-    marginBottom: 14,
+    marginBottom: 24,
   },
   pageTitle: {
     margin: 0,
-    fontSize: 20,
-    lineHeight: 1.2,
-    fontWeight: 950,
-    letterSpacing: 0,
+    fontSize: 26,
+    fontWeight: 900,
+    letterSpacing: "-0.3px",
   },
   pageSubtitle: {
-    margin: "4px 0 0",
+    margin: "6px 0 0",
     color: "#64748b",
-    fontSize: 13,
-    fontWeight: 700,
+    fontSize: 14,
   },
   actionRow: {
     display: "flex",
     gap: 8,
   },
-  header: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 10,
-    marginBottom: 12,
-  },
   button: {
-    height: 36,
-    padding: "0 14px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    height: 40,
+    padding: "0 16px",
     borderRadius: 8,
     border: "1px solid #cbd5e1",
     background: "#fff",
     color: "#1e293b",
-    fontSize: 13,
-    fontWeight: 900,
+    fontSize: 14,
+    fontWeight: 700,
     cursor: "pointer",
+    fontFamily: font,
   },
   primaryButton: {
-    height: 36,
-    padding: "0 14px",
-    borderRadius: 8,
-    border: "1px solid #2563eb",
-    background: "#2563eb",
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: 900,
-    cursor: "pointer",
-  },
-  riskPanel: {
-    display: "grid",
-    gridTemplateColumns: "150px 1fr 180px",
+    display: "inline-flex",
     alignItems: "center",
-    gap: 18,
-    padding: "14px 18px",
-    border: "1px solid #fecaca",
+    gap: 6,
+    height: 40,
+    padding: "0 16px",
     borderRadius: 8,
-    background: "#fff7f7",
-    marginBottom: 12,
-  },
-  riskTitle: {
-    margin: 0,
-    fontSize: 12,
-    fontWeight: 950,
-    color: "#64748b",
-  },
-  riskLevel: {
-    marginTop: 5,
-    fontSize: 18,
-    fontWeight: 950,
-  },
-  riskCopy: {
-    margin: 0,
-    color: "#64748b",
-    fontSize: 13,
-    lineHeight: 1.5,
+    border: "1px solid #173357",
+    background: "#173357", // ZCS 어두운 파란색
+    color: "#fff",
+    fontSize: 14,
     fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: font,
   },
-  riskTrack: {
-    height: 8,
-    marginTop: 0,
-    overflow: "hidden",
-    borderRadius: 999,
-    background: "#e2e8f0",
+
+  // KPI 타일
+  kpiRow: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 14,
+    marginBottom: 16,
   },
-  riskBar: {
-    height: "100%",
-    borderRadius: 999,
-    background: "#ef4444",
-  },
-  statCard: {
+  kpi: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 64,
-    padding: "14px 16px",
-    border: "1px solid #dbe3ef",
-    borderRadius: 8,
+    gap: 14,
+    padding: "18px 20px",
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
     background: "#fff",
   },
-  statLabel: {
-    color: "#64748b",
-    fontSize: 12,
+  kpiIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  kpiLabel: {
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  kpiValue: {
+    marginTop: 2,
+    fontSize: 26,
+    lineHeight: 1.2,
     fontWeight: 900,
   },
-  statValue: {
-    marginTop: 0,
-    fontSize: 24,
-    lineHeight: 1,
-    fontWeight: 950,
+  kpiSub: {
+    marginTop: 2,
+    color: "#94a3b8",
+    fontSize: 12,
+    fontWeight: 600,
   },
+
+  // 위험 상태 배너
+  riskBanner: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    padding: "16px 20px",
+    borderRadius: 10,
+    border: "1px solid #e2e8f0",
+    borderLeftWidth: 4,
+    background: "#fff",
+    marginBottom: 16,
+  },
+  riskLabel: {
+    fontSize: 15,
+    fontWeight: 900,
+  },
+  riskCopy: {
+    margin: "2px 0 0",
+    color: "#475569",
+    fontSize: 13,
+    lineHeight: 1.5,
+  },
+
+  // 차트/카드 배치
   grid: {
     display: "grid",
-    gridTemplateColumns: "360px minmax(0, 1fr)",
-    gap: 12,
-    alignItems: "start",
+    gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))",
+    gap: 16,
+    marginBottom: 16,
   },
   stack: {
     display: "grid",
-    gap: 12,
+    gap: 16,
+    alignContent: "start",
   },
   card: {
-    overflow: "hidden",
-    border: "1px solid #dbe3ef",
-    borderRadius: 8,
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
     background: "#fff",
+    overflow: "hidden",
   },
   cardHeader: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "13px 16px",
-    borderBottom: "1px solid #e2e8f0",
+    gap: 12,
+    padding: "18px 22px 0",
   },
   cardTitle: {
     margin: 0,
     fontSize: 16,
-    fontWeight: 950,
-  },
-  badge: {
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#eef4ff",
-    color: "#1e3a8a",
-    fontSize: 12,
     fontWeight: 900,
   },
-  body: {
-    padding: 16,
+  cardMeta: {
+    color: "#64748b",
+    fontSize: 13,
+    fontWeight: 600,
   },
-  severityRow: {
+  cardBody: {
+    padding: "18px 22px 22px",
+  },
+
+  // 분석 처리 상태
+  statusLegend: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px 18px",
+    marginTop: 14,
+    fontSize: 13,
+    color: "#475569",
+  },
+  legendItem: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 3,
+  },
+  legendValue: {
+    fontWeight: 800,
+    color: "#0f172a",
+  },
+
+  // 위험 파일 TOP 5 차트
+  riskRow: {
     display: "grid",
-    gridTemplateColumns: "82px 1fr 48px",
+    gridTemplateColumns: "22px minmax(0, 1fr) minmax(0, 1.2fr) 44px 16px",
     alignItems: "center",
     gap: 12,
-    marginBottom: 12,
+    padding: "11px 8px",
+    margin: "0 -8px",
+    borderRadius: 8,
+    cursor: "pointer",
+    transition: "background 0.15s",
   },
-  rowName: {
-    color: "#334155",
-    fontSize: 13,
-    fontWeight: 900,
+  rank: {
+    color: "#94a3b8",
+    fontSize: 12,
+    fontWeight: 800,
+    textAlign: "center",
   },
-  track: {
-    height: 10,
+  fileName: {
+    fontSize: 14,
+    fontWeight: 800,
     overflow: "hidden",
-    borderRadius: 999,
-    background: "#e2e8f0",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
-  bar: {
-    height: "100%",
-    borderRadius: 999,
+  fileMeta: {
+    marginTop: 2,
+    color: "#94a3b8",
+    fontSize: 12,
+    fontWeight: 600,
   },
+  total: {
+    fontSize: 13,
+    fontWeight: 800,
+    textAlign: "right",
+    fontVariantNumeric: "tabular-nums",
+  },
+
+  // 최근 분석 테이블
   table: {
     width: "100%",
     borderCollapse: "collapse",
     tableLayout: "fixed",
   },
   th: {
-    padding: "12px 14px",
-    background: "#f8fafc",
-    color: "#475569",
+    padding: "12px 22px",
+    color: "#64748b",
     borderBottom: "1px solid #e2e8f0",
     fontSize: 12,
-    fontWeight: 950,
+    fontWeight: 700,
     textAlign: "left",
   },
   td: {
-    padding: "12px 14px",
-    borderBottom: "1px solid #eef2f7",
+    padding: "14px 22px",
+    borderBottom: "1px solid #f1f5f9",
     fontSize: 13,
-    fontWeight: 800,
     verticalAlign: "middle",
-    wordBreak: "break-word",
-  },
-  fileName: {
-    fontWeight: 950,
-  },
-  muted: {
-    marginTop: 4,
-    color: "#64748b",
-    fontSize: 12,
-    fontWeight: 700,
-  },
-  chipRow: {
-    display: "flex",
-    gap: 6,
-    flexWrap: "wrap",
   },
   chip: {
-    padding: "4px 7px",
+    display: "inline-flex",
+    alignItems: "center",
+    height: 24,
+    padding: "0 10px",
     borderRadius: 999,
     background: "#f1f5f9",
     color: "#334155",
-    fontSize: 11,
-    fontWeight: 950,
+    fontSize: 12,
+    fontWeight: 800,
   },
-  dangerChip: {
-    background: "#fee2e2",
-    color: "#991b1b",
-  },
-  warningChip: {
-    background: "#ffedd5",
-    color: "#9a3412",
-  },
-  blockChip: {
-    background: "#fee2e2",
-    color: "#991b1b",
-  },
-  reviewChip: {
-    background: "#fef3c7",
-    color: "#92400e",
-  },
-  passChip: {
-    background: "#dcfce7",
-    color: "#166534",
-  },
+  blockChip: { background: "#fee2e2", color: "#991b1b" },
+  reviewChip: { background: "#fef3c7", color: "#92400e" },
+  passChip: { background: "#dcfce7", color: "#166534" },
   empty: {
-    padding: 34,
+    padding: "40px 22px",
     color: "#64748b",
-    fontSize: 15,
-    fontWeight: 700,
+    fontSize: 14,
     textAlign: "center",
   },
 };
@@ -329,6 +314,14 @@ const emptySummary: DashboardSummary = {
   riskyFiles: [],
 };
 
+// 분석 처리 상태 색 — dataviz 검증 스크립트로 색각 이상 구분 확인 (완료↔실패는
+// 막대에서 맞닿지 않게 순서 배치). 상태를 뜻하므로 라벨·건수와 항상 같이 표시
+const statusColors = {
+  done: "#16a34a",
+  analyzing: "#3987e5",
+  failed: "#d03b3b",
+};
+
 const formatDate = (value?: string) => {
   if (!value) return "-";
   const date = new Date(value);
@@ -345,22 +338,25 @@ const getRiskLevel = (summary: DashboardSummary) => {
   if (summary.criticalCount > 0) {
     return {
       label: "긴급 점검 필요",
-      color: "#dc2626",
-      copy: "Critical 취약점이 포함되어 있습니다. 우선 조치 항목과 위험 파일을 먼저 확인하는 것이 좋습니다.",
+      color: "#b91c1c",
+      icon: <ShieldAlert size={22} />,
+      copy: `Critical 취약점 ${summary.criticalCount}건이 포함되어 있습니다. 아래 위험 파일부터 먼저 확인하세요.`,
     };
   }
 
   if (summary.highCount > 0) {
     return {
       label: "주의 필요",
-      color: "#ea580c",
-      copy: "High 취약점이 발견되었습니다. 배포 전 패키지 버전과 수정 ZIP 적용 여부를 확인하세요.",
+      color: "#c2410c",
+      icon: <ShieldAlert size={22} />,
+      copy: `High 취약점 ${summary.highCount}건이 발견되었습니다. 배포 전 패키지 버전과 수정 ZIP 적용 여부를 확인하세요.`,
     };
   }
 
   return {
     label: "양호",
     color: "#15803d",
+    icon: <ShieldCheck size={22} />,
     copy: "현재 저장된 분석 기준으로 심각한 취약점이 발견되지 않았습니다.",
   };
 };
@@ -369,8 +365,16 @@ const getPolicyChipStyle = (decision?: string) => {
   if (decision === "BLOCK") return styles.blockChip;
   if (decision === "REVIEW") return styles.reviewChip;
   if (decision === "PASS") return styles.passChip;
-  return styles.chip;
+  return {};
 };
+
+// 파일 하나의 등급별 건수 → 누적 막대 조각
+const fileSegments = (file: FileHistoryItem) => [
+  { key: "Critical", label: "Critical", value: file.criticalCount ?? 0, color: severitySeries[0].color },
+  { key: "High", label: "High", value: file.highCount ?? 0, color: severitySeries[1].color },
+  { key: "Medium", label: "Medium", value: file.mediumCount ?? 0, color: severitySeries[2].color },
+  { key: "Low", label: "Low", value: file.lowCount ?? 0, color: severitySeries[3].color },
+];
 
 export default function DashboardScreen() {
   const navigate = useNavigate();
@@ -404,274 +408,266 @@ export default function DashboardScreen() {
     };
   }, []);
 
-  const severityItems = useMemo(
+  const severityData = useMemo(
     () => [
-      { name: "Critical", value: summary.criticalCount, color: "#ef4444" },
-      { name: "High", value: summary.highCount, color: "#f97316" },
-      { name: "Medium", value: summary.mediumCount, color: "#eab308" },
-      { name: "Low", value: summary.lowCount, color: "#22c55e" },
+      { key: "Critical", label: "Critical", value: summary.criticalCount, color: severitySeries[0].color },
+      { key: "High", label: "High", value: summary.highCount, color: severitySeries[1].color },
+      { key: "Medium", label: "Medium", value: summary.mediumCount, color: severitySeries[2].color },
+      { key: "Low", label: "Low", value: summary.lowCount, color: severitySeries[3].color },
     ],
     [summary],
   );
 
-  const maxSeverity = Math.max(...severityItems.map((item) => item.value), 1);
+  const statusData = [
+    { key: "done", label: "완료", value: summary.doneCount, color: statusColors.done },
+    { key: "analyzing", label: "분석 중", value: summary.analyzingCount, color: statusColors.analyzing },
+    { key: "failed", label: "실패", value: summary.failedCount, color: statusColors.failed },
+  ];
+
   const risk = getRiskLevel(summary);
-  const criticalRatio =
-    summary.totalFindings > 0
-      ? Math.min((summary.criticalCount / summary.totalFindings) * 100, 100)
-      : 0;
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const maxRiskyTotal = Math.max(...summary.riskyFiles.map((f) => f.totalFindings ?? 0), 1);
+  const openResult = (fileSeq: number) => navigate(`/scan-result/${fileSeq}`);
+
+  const kpis = [
+    {
+      label: "분석 파일",
+      value: summary.totalFiles,
+      unit: "개",
+      sub: `분석 중 ${summary.analyzingCount} · 실패 ${summary.failedCount}`,
+      icon: <FileStack size={20} />,
+      color: "#1f4e8c",
+      bg: "rgba(31, 78, 140, 0.08)",
+    },
+    {
+      label: "분석 완료",
+      value: summary.doneCount,
+      unit: "개",
+      sub:
+        summary.totalFiles > 0
+          ? `완료율 ${Math.round((summary.doneCount / summary.totalFiles) * 100)}%`
+          : "완료율 -",
+      icon: <CircleCheck size={20} />,
+      color: "#15803d",
+      bg: "rgba(22, 163, 74, 0.08)",
+    },
+    {
+      label: "구성요소",
+      value: summary.totalComponents,
+      unit: "개",
+      sub: "전체 분석 파일 합계",
+      icon: <Boxes size={20} />,
+      color: "#1f4e8c",
+      bg: "rgba(31, 78, 140, 0.08)",
+    },
+    {
+      label: "전체 취약점",
+      value: summary.totalFindings,
+      unit: "건",
+      sub: `Critical ${summary.criticalCount} · High ${summary.highCount}`,
+      icon: <ShieldAlert size={20} />,
+      color: "#9b1c1c",
+      bg: "rgba(155, 28, 28, 0.08)",
+    },
+  ];
+
+  const renderState = (files: FileHistoryItem[]) => {
+    if (isLoading) return <div style={styles.empty}>대시보드를 불러오는 중입니다.</div>;
+    if (errorMessage) return <div style={styles.empty}>{errorMessage}</div>;
+    if (files.length === 0) return <div style={styles.empty}>표시할 분석 파일이 없습니다.</div>;
+    return null;
   };
 
   return (
     <main style={styles.page}>
-      <nav style={styles.topbar}>
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          aria-label="홈으로 이동"
-          style={{ ...styles.brand, background: "none", border: "none", padding: 0, cursor: "pointer" }}
-        >
-          <div style={styles.brandMark}>ZCS</div>
-          <div style={styles.brandText}>
-            <div style={styles.brandName}>Zero Check SBOM</div>
-            <div style={styles.brandSub}>Security Service</div>
-          </div>
-        </button>
-        <div style={styles.nav}>
-          <button style={styles.navItem} onClick={() => navigate("/upload")}>
-            파일 입력
-          </button>
-          <button style={styles.navItem} onClick={() => navigate("/history")}>
-            저장소
-          </button>
-          <button style={styles.navItem} onClick={handleLogout}>
-            로그아웃
-          </button>
-        </div>
-      </nav>
+      <Topbar />
 
       <div style={styles.content}>
         <section style={styles.pageHeader}>
           <div>
             <h1 style={styles.pageTitle}>SBOM 보안 현황</h1>
             <p style={styles.pageSubtitle}>
-              분석 이력, 구성요소, 취약점 분포와 우선 확인 파일을 요약합니다.
+              분석 이력, 구성요소, 취약점 분포와 우선 확인할 파일을 한눈에 봅니다.
             </p>
           </div>
           <div style={styles.actionRow}>
-            <button style={styles.button} onClick={() => navigate("/history")}>
+            <button type="button" style={styles.button} onClick={() => navigate("/history")}>
+              <History size={16} />
               분석 히스토리
             </button>
-            <button style={styles.primaryButton} onClick={() => navigate("/upload")}>
+            <button type="button" style={styles.primaryButton} onClick={() => navigate("/upload")}>
+              <Plus size={16} />
               새 파일 분석
             </button>
           </div>
         </section>
 
-        <section style={styles.header}>
-          <StatCard label="분석 파일" value={summary.totalFiles} />
-          <StatCard label="분석 완료" value={summary.doneCount} />
-          <StatCard label="구성요소" value={summary.totalComponents} />
-          <StatCard label="전체 취약점" value={summary.totalFindings} />
+        <section style={styles.kpiRow}>
+          {kpis.map((kpi) => (
+            <div key={kpi.label} style={styles.kpi}>
+              <div style={{ ...styles.kpiIcon, color: kpi.color, background: kpi.bg }}>{kpi.icon}</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={styles.kpiLabel}>{kpi.label}</div>
+                <div style={styles.kpiValue}>
+                  {kpi.value.toLocaleString()}
+                  <span style={{ ...styles.kpiSub, marginLeft: 3, fontSize: 14 }}>{kpi.unit}</span>
+                </div>
+                <div style={styles.kpiSub}>{kpi.sub}</div>
+              </div>
+            </div>
+          ))}
         </section>
 
-        <aside style={styles.riskPanel}>
-          <div>
-            <h2 style={styles.riskTitle}>현재 위험 상태</h2>
-            <div style={{ ...styles.riskLevel, color: risk.color }}>{risk.label}</div>
-          </div>
-          <p style={styles.riskCopy}>{risk.copy}</p>
-          <div style={styles.riskTrack}>
-            <div
-              style={{
-                ...styles.riskBar,
-                width: `${Math.max(criticalRatio, summary.criticalCount > 0 ? 8 : 0)}%`,
-                background: risk.color,
-              }}
-            />
-          </div>
-        </aside>
+        {!isLoading && !errorMessage && (
+          <aside style={{ ...styles.riskBanner, borderLeftColor: risk.color }}>
+            <span style={{ color: risk.color, display: "flex" }}>{risk.icon}</span>
+            <div>
+              <div style={{ ...styles.riskLabel, color: risk.color }}>{risk.label}</div>
+              <p style={styles.riskCopy}>{risk.copy}</p>
+            </div>
+          </aside>
+        )}
 
         <section style={styles.grid}>
           <div style={styles.stack}>
-            <DistributionCard
-              title="취약점 분포"
-              badge={`총 ${summary.totalFindings}건`}
-              rows={severityItems}
-              maxValue={maxSeverity}
-            />
-            <DistributionCard
-              title="분석 처리 상태"
-              badge={`완료 ${summary.doneCount}건`}
-              rows={[
-                { name: "DONE", value: summary.doneCount, color: "#2563eb" },
-                { name: "ANALYZING", value: summary.analyzingCount, color: "#14b8a6" },
-                { name: "FAILED", value: summary.failedCount, color: "#ef4444" },
-              ]}
-              maxValue={Math.max(summary.totalFiles, 1)}
-            />
+            <section style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h2 style={styles.cardTitle}>취약점 분포</h2>
+                <span style={styles.cardMeta}>전체 파일 기준</span>
+              </div>
+              <div style={styles.cardBody}>
+                <DonutChart data={severityData} centerLabel="전체 취약점" unit="건" size={156} />
+              </div>
+            </section>
+
+            <section style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h2 style={styles.cardTitle}>분석 처리 상태</h2>
+                <span style={styles.cardMeta}>총 {summary.totalFiles}개 파일</span>
+              </div>
+              <div style={styles.cardBody}>
+                <StackedBar segments={statusData} unit="개" height={12} />
+                <div style={styles.statusLegend}>
+                  {statusData.map((s) => (
+                    <span key={s.key} style={styles.legendItem}>
+                      <span style={{ ...styles.legendDot, background: s.color }} />
+                      {s.label} <span style={styles.legendValue}>{s.value}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </section>
           </div>
 
-          <FileTable
-            title="최근 분석"
-            badge={`최근 ${summary.latestFiles.length}건`}
-            files={summary.latestFiles}
-            isLoading={isLoading}
-            errorMessage={errorMessage}
-            onOpen={(fileSeq) => navigate(`/scan-result/${fileSeq}`)}
-          />
+          <section style={styles.card}>
+            <div style={styles.cardHeader}>
+              <h2 style={styles.cardTitle}>위험 파일 TOP 5</h2>
+              <div style={styles.statusLegend}>
+                {severityData.map((s) => (
+                  <span key={s.key} style={styles.legendItem}>
+                    <span style={{ ...styles.legendDot, background: s.color }} />
+                    {s.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div style={styles.cardBody}>
+              {renderState(summary.riskyFiles) ??
+                summary.riskyFiles.slice(0, 5).map((file, index) => (
+                  <div
+                    key={`risky-${file.fileSeq}`}
+                    style={styles.riskRow}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openResult(file.fileSeq)}
+                    onKeyDown={(e) => e.key === "Enter" && openResult(file.fileSeq)}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <span style={styles.rank}>{index + 1}</span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={styles.fileName} title={file.fileName}>
+                        {file.fileName}
+                      </div>
+                      <div style={styles.fileMeta}>구성요소 {file.componentCount ?? 0}개</div>
+                    </div>
+                    <StackedBar segments={fileSegments(file)} scaleMax={maxRiskyTotal} unit="건" />
+                    <span style={styles.total}>{file.totalFindings ?? 0}건</span>
+                    <ChevronRight size={16} color="#94a3b8" />
+                  </div>
+                ))}
+            </div>
+          </section>
         </section>
 
-        <section style={{ marginTop: 18 }}>
-          <FileTable
-            title="위험 파일 TOP 5"
-            badge="Risk Score"
-            files={summary.riskyFiles}
-            isLoading={isLoading}
-            errorMessage={errorMessage}
-            onOpen={(fileSeq) => navigate(`/scan-result/${fileSeq}`)}
-          />
+        <section style={styles.card}>
+          <div style={{ ...styles.cardHeader, paddingBottom: 14 }}>
+            <h2 style={styles.cardTitle}>최근 분석</h2>
+            <span style={styles.cardMeta}>최근 {summary.latestFiles.length}건</span>
+          </div>
+          {renderState(summary.latestFiles) ?? (
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ ...styles.th, width: "34%" }}>파일</th>
+                  <th style={{ ...styles.th, width: "30%" }}>취약점</th>
+                  <th style={{ ...styles.th, width: "14%" }}>정책 판정</th>
+                  <th style={{ ...styles.th, width: "15%" }}>업로드</th>
+                  <th style={{ ...styles.th, width: "7%" }} aria-label="결과 보기" />
+                </tr>
+              </thead>
+              <tbody>
+                {summary.latestFiles.map((file) => (
+                  <tr
+                    key={`latest-${file.fileSeq}`}
+                    style={{ cursor: "pointer", transition: "background 0.15s" }}
+                    onClick={() => openResult(file.fileSeq)}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <td style={styles.td}>
+                      <div style={styles.fileName} title={file.fileName}>
+                        {file.fileName}
+                      </div>
+                      <div style={styles.fileMeta}>
+                        파일 {file.fileSeq} · 구성요소 {file.componentCount ?? 0}개
+                      </div>
+                    </td>
+                    <td style={styles.td}>
+                      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 44px", alignItems: "center", gap: 10 }}>
+                        <StackedBar segments={fileSegments(file)} unit="건" height={8} />
+                        <span style={styles.total}>{file.totalFindings ?? 0}건</span>
+                      </div>
+                    </td>
+                    <td style={styles.td}>
+                      {file.policyDecisionLabel ? (
+                        <span style={{ ...styles.chip, ...getPolicyChipStyle(file.policyDecision) }}>
+                          {file.policyDecisionLabel}
+                        </span>
+                      ) : (
+                        <span style={styles.fileMeta}>-</span>
+                      )}
+                    </td>
+                    <td style={{ ...styles.td, color: "#475569" }}>{formatDate(file.uploadDate)}</td>
+                    <td style={{ ...styles.td, textAlign: "right" }}>
+                      <button
+                        type="button"
+                        aria-label={`${file.fileName} 결과 보기`}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "inline-flex" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openResult(file.fileSeq);
+                        }}
+                      >
+                        <ChevronRight size={18} color="#94a3b8" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
       </div>
     </main>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div style={styles.statCard}>
-      <div style={styles.statLabel}>{label}</div>
-      <div style={styles.statValue}>{value}</div>
-    </div>
-  );
-}
-
-type DistributionRow = {
-  name: string;
-  value: number;
-  color: string;
-};
-
-function DistributionCard({
-  title,
-  badge,
-  rows,
-  maxValue,
-}: {
-  title: string;
-  badge: string;
-  rows: DistributionRow[];
-  maxValue: number;
-}) {
-  return (
-    <section style={styles.card}>
-      <div style={styles.cardHeader}>
-        <h2 style={styles.cardTitle}>{title}</h2>
-        <span style={styles.badge}>{badge}</span>
-      </div>
-      <div style={styles.body}>
-        {rows.map((item) => (
-          <div key={item.name} style={styles.severityRow}>
-            <div style={styles.rowName}>{item.name}</div>
-            <div style={styles.track}>
-              <div
-                style={{
-                  ...styles.bar,
-                  width: `${Math.max((item.value / Math.max(maxValue, 1)) * 100, item.value > 0 ? 4 : 0)}%`,
-                  background: item.color,
-                }}
-              />
-            </div>
-            <div style={styles.rowName}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-type FileTableProps = {
-  title: string;
-  badge: string;
-  files: FileHistoryItem[];
-  isLoading: boolean;
-  errorMessage: string;
-  onOpen: (fileSeq: number) => void;
-};
-
-function FileTable({
-  title,
-  badge,
-  files,
-  isLoading,
-  errorMessage,
-  onOpen,
-}: FileTableProps) {
-  return (
-    <section style={styles.card}>
-      <div style={styles.cardHeader}>
-        <h2 style={styles.cardTitle}>{title}</h2>
-        <span style={styles.badge}>{badge}</span>
-      </div>
-      {isLoading && <div style={styles.empty}>대시보드를 불러오는 중입니다.</div>}
-      {!isLoading && errorMessage && <div style={styles.empty}>{errorMessage}</div>}
-      {!isLoading && !errorMessage && files.length === 0 && (
-        <div style={styles.empty}>표시할 분석 파일이 없습니다.</div>
-      )}
-      {!isLoading && !errorMessage && files.length > 0 && (
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={{ ...styles.th, width: "43%" }}>파일</th>
-              <th style={{ ...styles.th, width: "30%" }}>위험도 / 정책</th>
-              <th style={{ ...styles.th, width: "14%" }}>업로드</th>
-              <th style={{ ...styles.th, width: "13%" }}>결과</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((file) => (
-              <tr key={`${title}-${file.fileSeq}`}>
-                <td style={styles.td}>
-                  <div style={styles.fileName}>{file.fileName}</div>
-                  <div style={styles.muted}>
-                    파일 {file.fileSeq} · 구성요소 {file.componentCount ?? 0}개
-                  </div>
-                </td>
-                <td style={styles.td}>
-                  <div style={styles.chipRow}>
-                    <span style={{ ...styles.chip, ...styles.dangerChip }}>
-                      C {file.criticalCount ?? 0}
-                    </span>
-                    <span style={{ ...styles.chip, ...styles.warningChip }}>
-                      H {file.highCount ?? 0}
-                    </span>
-                    <span style={styles.chip}>T {file.totalFindings ?? 0}</span>
-                    {file.policyDecisionLabel && (
-                      <span
-                        style={{
-                          ...styles.chip,
-                          ...getPolicyChipStyle(file.policyDecision),
-                        }}
-                      >
-                        {file.policyDecisionLabel}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td style={styles.td}>{formatDate(file.uploadDate)}</td>
-                <td style={styles.td}>
-                  <button style={styles.button} onClick={() => onOpen(file.fileSeq)}>
-                    보기
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
   );
 }

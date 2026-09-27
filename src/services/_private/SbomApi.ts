@@ -1,5 +1,4 @@
 import { axiosInstance } from "./ApiConfig";
-import { getCurrentMembSeq } from "../../utils/currentUser";
 
 export type ScanResult = {
   resultSeq: number;
@@ -97,10 +96,10 @@ export type PolicyResult = {
   passedRules: PolicyRuleResult[];
 };
 
-export const uploadSbomFile = async (file: File, membSeq: number) => {
+// 회원 정보는 로그인 토큰으로 서버가 알아내므로 membSeq를 따로 보내지 않는다
+export const uploadSbomFile = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("membSeq", String(membSeq));
 
   try {
     const response = await axiosInstance.post("/upload", formData, {
@@ -145,12 +144,7 @@ export const downloadFixedZip = async (fileSeq: string | number) => {
 };
 
 export const getFileHistory = async () => {
-  const membSeq = getCurrentMembSeq();
-  if (!membSeq) throw new Error("로그인이 필요합니다.");
-
-  const response = await axiosInstance.get("/files", {
-    params: { membSeq },
-  });
+  const response = await axiosInstance.get("/files");
   return response.data;
 };
 
@@ -160,11 +154,6 @@ export const getFileStatus = async (fileSeq: string | number) => {
 };
 
 export const getDashboardSummary = async () => {
-  const membSeq = getCurrentMembSeq();
-  if (!membSeq) throw new Error("로그인이 필요합니다.");
-
-  const response = await axiosInstance.get("/dashboard/summary", {
-    params: { membSeq },
-  });
+  const response = await axiosInstance.get("/dashboard/summary");
   return response.data;
 };
