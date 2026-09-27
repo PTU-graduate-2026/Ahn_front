@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { History, Home, RotateCcw, FileDown } from "lucide-react";
+import { History, Home, RotateCcw, FileDown, Wrench } from "lucide-react";
 import { generatePdfReport } from "../utils/generatePdfReport";
 import { useNavigate, useParams } from "react-router-dom";
 import { ComponentTable } from "../components/scan/ComponentTable";
@@ -9,7 +9,6 @@ import { PolicyDecisionPanel } from "../components/scan/PolicyDecisionPanel";
 import { PriorityFixes } from "../components/scan/PriorityFixes";
 import { RiskOverview } from "../components/scan/RiskOverview";
 import { ScanSummaryCards } from "../components/scan/ScanSummaryCards";
-import { VulnerabilityTable } from "../components/scan/VulnerabilityTable";
 import { useScanResult } from "../hooks/useScanResult";
 import { scanResultStyles as styles } from "../styles/scanResult";
 import {
@@ -26,6 +25,7 @@ export default function ScanResultScreen() {
   const { fileSeq } = useParams();
   const navigate = useNavigate();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showFixPlan, setShowFixPlan] = useState(false);
 
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
@@ -95,7 +95,7 @@ export default function ScanResultScreen() {
           <button
             type="button"
             style={styles.button}
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
           >
             <Home size={16} />
             홈
@@ -116,6 +116,14 @@ export default function ScanResultScreen() {
           >
             <FileDown size={16} />
             {isGeneratingPdf ? "생성 중..." : "PDF 리포트"}
+          </button>
+          <button
+            type="button"
+            style={showFixPlan ? styles.primaryActionButton : styles.button}
+            onClick={() => setShowFixPlan((prev) => !prev)}
+          >
+            <Wrench size={16} />
+            자동 수정안
           </button>
           <button
             type="button"
@@ -157,17 +165,18 @@ export default function ScanResultScreen() {
             vulnerableComponentKeys={vulnerableComponentKeys}
           />
 
-          <FixPlanPanel
-            autoFixPlan={autoFixPlan}
-            manualFixPlan={manualFixPlan}
-            isDownloading={isDownloading}
-            onDownload={downloadFixedProjectZip}
-          />
+          {showFixPlan && (
+            <section style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <FixPlanPanel
+                autoFixPlan={autoFixPlan}
+                manualFixPlan={manualFixPlan}
+                isDownloading={isDownloading}
+                onDownload={downloadFixedProjectZip}
+              />
 
-          <section style={styles.contentGrid}>
-            <PriorityFixes topFixes={topFixes} />
-            <VulnerabilityTable results={sortedResults} />
-          </section>
+              <PriorityFixes topFixes={topFixes} />
+            </section>
+          )}
         </>
       )}
     </main>

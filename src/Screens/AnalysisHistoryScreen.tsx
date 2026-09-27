@@ -236,7 +236,7 @@ export default function AnalysisHistoryScreen() {
           </p>
         </div>
         <div style={styles.buttonGroup}>
-          <button style={styles.button} onClick={() => navigate("/")}>
+          <button style={styles.button} onClick={() => navigate("/dashboard")}>
             홈
           </button>
           <button style={styles.primaryButton} onClick={() => navigate("/upload")}>

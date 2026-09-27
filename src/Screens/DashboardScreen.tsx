@@ -5,7 +5,7 @@ import {
   FileHistoryItem,
   getDashboardSummary,
 } from "../services/_private/SbomApi";
-import { clearCurrentUser } from "../utils/currentUser";
+import { logout } from "../utils/currentUser";
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
@@ -85,6 +85,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#64748b",
     fontSize: 13,
     fontWeight: 700,
+  },
+  actionRow: {
+    display: "flex",
+    gap: 8,
   },
   header: {
     display: "grid",
@@ -417,26 +421,25 @@ export default function DashboardScreen() {
       ? Math.min((summary.criticalCount / summary.totalFindings) * 100, 100)
       : 0;
   const handleLogout = () => {
-    clearCurrentUser();
-    // 구글이 "이전에 이 계정으로 로그인했음"을 기억해서 로그인 화면에
-    // 계정이 자동으로 떠버리는 걸 방지 (로그아웃 시 구글 측 기억 상태 초기화)
-    const google = (window as any).google;
-    if (google?.accounts?.id?.disableAutoSelect) {
-      google.accounts.id.disableAutoSelect();
-    }
+    logout();
     navigate("/login");
   };
 
   return (
     <main style={styles.page}>
       <nav style={styles.topbar}>
-        <div style={styles.brand}>
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          aria-label="홈으로 이동"
+          style={{ ...styles.brand, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
           <div style={styles.brandMark}>ZCS</div>
           <div style={styles.brandText}>
             <div style={styles.brandName}>Zero Check SBOM</div>
             <div style={styles.brandSub}>Security Service</div>
           </div>
-        </div>
+        </button>
         <div style={styles.nav}>
           <button style={styles.navItem} onClick={() => navigate("/upload")}>
             파일 입력

@@ -22,14 +22,7 @@ export default function Router() {
         <Route path="/find-id" element={<FindId />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <DashboardScreen />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<Introduce />} />
         <Route path="/intro" element={<Introduce />} />
         <Route path="/login" element={<Login />} />
         <Route

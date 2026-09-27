@@ -11,7 +11,7 @@ export default function SignUp() {
     password: "",
     name: "",
     email: "",
-    confirmPassword: "", //이거 다시 확인 제미니 병신이라
+    confirmPassword: "", // handleSignUp에서 password와 일치하는지 검사
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,13 +19,19 @@ export default function SignUp() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (e?: React.FormEvent) => {
+    e?.preventDefault(); // form 제출 시 페이지 새로고침 방지
     // 간단한 유효성 검사
     // formData거 가져다 쓴다
-    const { id, password, name, email } = formData;
+    const { id, password, name, email, confirmPassword } = formData;
 
     if (!id || !password || !name || !email) {
       alert("모든 정보를 입력해주세요.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("비밀번호가 일치하지 않습니다.");
       return;
     }
 
@@ -112,7 +118,10 @@ export default function SignUp() {
           ZCS 서비스 이용을 위해 정보를 입력해주세요.
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <form
+          onSubmit={handleSignUp}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
           <input
             name="name"
             placeholder="Name"
@@ -148,14 +157,14 @@ export default function SignUp() {
             type="password"
             placeholder="Confirm Password"
             style={styles.input}
-            value={formData.confirmPassword} //  여기도 다시 보기
+            value={formData.confirmPassword}
             onChange={handleChange}
           />
 
-          <button style={styles.button} onClick={handleSignUp}>
+          <button type="submit" style={styles.button}>
             Sign Up
           </button>
-        </div>
+        </form>
 
         <span style={styles.backLink} onClick={() => navigate("/login")}>
           이미 계정이 있으신가요? <b>로그인으로 돌아가기</b>

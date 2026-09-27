@@ -12,7 +12,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isLoggedIn()) {
-      navigation("/");
+      navigation("/dashboard");
     }
   }, [navigation]);
 
@@ -24,7 +24,7 @@ export default function Login() {
         const membSeq = result.data?.membSeq;
         if (membSeq) {
           setCurrentUser(membSeq, result.data?.membNm);
-          navigation("/");
+          navigation("/dashboard");
           return;
         }
       }
@@ -72,8 +72,9 @@ export default function Login() {
     document.body.appendChild(script);
   }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e?: React.FormEvent) => {
     //간단히 loginApicall을 부르기위한
+    e?.preventDefault(); // form 제출 시 페이지 새로고침 방지
 
     if (!id || !password) {
       alert("아이디와 비밀번호를 입력해주세요.");
@@ -86,7 +87,7 @@ export default function Login() {
         const membSeq = result.data?.membSeq;
         if (membSeq) {
           setCurrentUser(membSeq, result.data?.membNm);
-          navigation("/");
+          navigation("/dashboard");
           return;
         }
         alert("로그인은 성공했지만 회원 번호를 받지 못했습니다. 백엔드 응답을 확인해주세요.");
@@ -177,7 +178,10 @@ export default function Login() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>ZCS</h1>
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <form
+          onSubmit={handleLogin}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
           <input
             type="text"
             placeholder="ID"
@@ -206,8 +210,8 @@ export default function Login() {
           />
 
           <button
+            type="submit"
             style={styles.button}
-            onClick={handleLogin}
             onMouseOver={(e) =>
               (e.currentTarget.style.backgroundColor =
                 CommonStyle.colors.darkNavy)
@@ -219,7 +223,7 @@ export default function Login() {
           >
             Sign In
           </button>
-        </div>
+        </form>
 
         <div style={styles.divider}>
           <span style={styles.dividerLine} />

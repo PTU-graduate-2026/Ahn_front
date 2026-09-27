@@ -20,6 +20,16 @@ export const clearCurrentUser = () => {
   window.localStorage.removeItem(MEMBER_NAME_KEY);
 };
 
+export const logout = () => {
+  clearCurrentUser();
+  // 구글이 "이전에 이 계정으로 로그인했음"을 기억해서 로그인 화면에
+  // 계정이 자동으로 떠버리는 걸 방지 (로그아웃 시 구글 측 기억 상태 초기화)
+  const google = (window as any).google;
+  if (google?.accounts?.id?.disableAutoSelect) {
+    google.accounts.id.disableAutoSelect();
+  }
+};
+
 export const isLoggedIn = () => {
   return getCurrentMembSeq() !== null;
 };

@@ -31,6 +31,8 @@ export default function FileUploadScreen() {
       }
 
       // 여러 파일 선택했을 경우 하나씩 순서대로 업로드
+      // 전부 올린 뒤에 이동해야 나머지 파일이 화면 밖에서 업로드되지 않음
+      const uploadedSeqs: number[] = [];
       for (const file of files) {
         // SbomApi.ts의 uploadSbomFile 호출
         // file → 실제 파일
@@ -40,7 +42,7 @@ export default function FileUploadScreen() {
           // 백엔드에서 success: true 오면 성공
           const fileSeq = result.data?.fileSeq;
           if (fileSeq) {
-            navigate(`/scan-loading/${fileSeq}`);
+            uploadedSeqs.push(fileSeq);
           } else {
             alert(
               `${file.name} 업로드는 성공했지만 분석 결과 번호를 받지 못했습니다. 백엔드가 최신 코드로 재시작됐는지 확인해주세요.`,
@@ -50,6 +52,14 @@ export default function FileUploadScreen() {
           // 백엔드에서 success: false 오면 실패
           alert(`${file.name} 업로드 실패: ${result.message}`);
         }
+      }
+
+      // 1개면 해당 파일 로딩 화면으로, 여러 개면 히스토리에서 한 번에 확인
+      if (uploadedSeqs.length === 1) {
+        navigate(`/scan-loading/${uploadedSeqs[0]}`);
+      } else if (uploadedSeqs.length > 1) {
+        alert(`${uploadedSeqs.length}개 파일 업로드 완료. 분석 히스토리에서 결과를 확인하세요.`);
+        navigate("/history");
       }
     } finally {
       setIsUploading(false);
@@ -71,7 +81,7 @@ export default function FileUploadScreen() {
           onAnalyze={handleAnalyze}
         />
         {isUploading && (
-          <div style={{ color: "#fff", marginTop: 12 }}>
+          <div style={{ color: "#4a5568", marginTop: 12 }}>
             업로드 및 분석 중입니다...
           </div>
         )}
