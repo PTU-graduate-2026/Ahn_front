@@ -37,18 +37,19 @@ export function RiskOverview({
 }: RiskOverviewProps) {
   return (
     <section style={styles.reportHero}>
+      {/* 흰 바탕 + 왼쪽 색 띠, 아이콘·라벨만 위험 색으로 */}
       <div
         style={{
           ...styles.riskCardBase,
-          background: riskStatus.bg,
-          border: `1px solid ${riskStatus.border}`,
+          border: "1px solid #e2e8f0",
+          borderLeft: `4px solid ${riskStatus.color}`,
         }}
       >
-        <div style={{ ...styles.riskIconBase, color: riskStatus.color }}>
-          {totalResults > 0 ? <ShieldAlert size={25} /> : <CheckCircle2 size={25} />}
+        <div style={{ ...styles.riskIconBase, color: riskStatus.color, background: riskStatus.bg }}>
+          {totalResults > 0 ? <ShieldAlert size={24} /> : <CheckCircle2 size={24} />}
         </div>
         <div>
-          <span style={{ ...styles.riskLabelBase, color: riskStatus.color }}>
+          <span style={{ ...styles.riskLabelBase, color: riskStatus.color, background: riskStatus.bg }}>
             {riskStatus.label}
           </span>
           <h2 style={{ ...styles.riskTitleBase, color: riskStatus.color }}>

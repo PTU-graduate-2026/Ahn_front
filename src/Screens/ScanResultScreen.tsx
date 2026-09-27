@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { History, Home, RotateCcw, FileDown, Wrench } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, RotateCcw, FileDown, Wrench } from "lucide-react";
+import Topbar from "./IntroduceScreen/Topbar";
 import { generatePdfReport } from "../utils/generatePdfReport";
 import { useNavigate, useParams } from "react-router-dom";
 import { ComponentTable } from "../components/scan/ComponentTable";
@@ -84,11 +85,17 @@ export default function ScanResultScreen() {
 
   return (
     <main style={styles.page}>
+      <Topbar />
+      <div style={styles.content}>
+      <button type="button" style={styles.backLink} onClick={() => navigate("/history")}>
+        <ArrowLeft size={16} />
+        분석 히스토리
+      </button>
       <header style={styles.header}>
         <div>
           <h1 style={styles.title}>SBOM 분석 결과</h1>
           <p style={styles.subtitle}>
-            파일 번호 {fileSeq} 기준의 구성요소, 취약점, 권장 수정 버전입니다.
+            파일 #{fileSeq}의 구성요소, 취약점, 권장 수정 버전입니다.
           </p>
         </div>
         <div style={styles.headerActions}>
@@ -97,16 +104,8 @@ export default function ScanResultScreen() {
             style={styles.button}
             onClick={() => navigate("/dashboard")}
           >
-            <Home size={16} />
-            홈
-          </button>
-          <button
-            type="button"
-            style={styles.button}
-            onClick={() => navigate("/history")}
-          >
-            <History size={16} />
-            히스토리
+            <LayoutDashboard size={16} />
+            대시보드
           </button>
           <button
             type="button"
@@ -179,6 +178,7 @@ export default function ScanResultScreen() {
           )}
         </>
       )}
+      </div>
     </main>
   );
 }
