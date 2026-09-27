@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import CommonStyle from "../../styles/CommonStyle";
+import { Eye, EyeOff } from "lucide-react";
+import { authStyles as s } from "../../styles/auth";
+import AuthBrandPanel from "./AuthBrandPanel";
 import { loginApiCall } from "../../services/_private/Login/LoginApi";
 import { googleLoginApiCall } from "../../services/_private/Auth/GoogleAuthApi";
 import { useNavigate } from "react-router-dom";
@@ -106,169 +108,108 @@ export default function Login() {
     }
   };
 
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: CommonStyle.colors.background, // 설정값 사용
-      fontFamily: "sans-serif",
-    },
-    card: {
-      width: "100%",
-      maxWidth: "400px",
-      padding: "50px 40px",
-      backgroundColor: CommonStyle.colors.white,
-      borderRadius: CommonStyle.Radius.card,
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
-      textAlign: "center" as const,
-    },
-    title: {
-      fontSize: "42px",
-      fontWeight: "900",
-      color: CommonStyle.colors.mainNavy,
-      marginBottom: "40px",
-      letterSpacing: "1px",
-    },
-    input: {
-      width: "100%",
-      padding: "16px",
-      marginBottom: "12px",
-      backgroundColor: CommonStyle.colors.white,
-      border: `1px solid ${CommonStyle.colors.border}`,
-      borderRadius: CommonStyle.Radius.input,
-      color: CommonStyle.colors.mainNavy,
-      fontSize: "16px",
-      outline: "none",
-      boxSizing: "border-box" as const,
-      transition: "border-color 0.2s",
-    },
-    button: {
-      width: "100%",
-      padding: "16px",
-      backgroundColor: CommonStyle.colors.mainNavy,
-      color: "white",
-      border: "none",
-      borderRadius: CommonStyle.Radius.button,
-      fontSize: "16px",
-      fontWeight: "bold",
-      cursor: "pointer",
-      marginTop: "10px",
-      transition: "background-color 0.3s",
-    },
-    footer: {
-      marginTop: "30px",
-      display: "flex",
-      justifyContent: "center",
-      gap: "15px",
-      fontSize: "14px",
-      color: CommonStyle.colors.textGray,
-    },
-    divider: {
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      margin: "24px 0",
-      color: CommonStyle.colors.textGray,
-      fontSize: "13px",
-    },
-    dividerLine: {
-      flex: 1,
-      height: "1px",
-      backgroundColor: CommonStyle.colors.divider,
-    },
-  };
+  // 화면 표시용 상태 (포커스된 입력칸, 비밀번호 보기, 버튼 hover)
+  const [focused, setFocused] = useState<"id" | "password" | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitHover, setIsSubmitHover] = useState(false);
+  const hasGoogleLogin = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>ZCS</h1>
-        <form
-          onSubmit={handleLogin}
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <input
-            type="text"
-            placeholder="ID"
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-            style={styles.input}
-            onFocus={(e) =>
-              (e.currentTarget.style.borderColor = CommonStyle.colors.mainNavy)
-            }
-            onBlur={(e) =>
-              (e.currentTarget.style.borderColor = CommonStyle.colors.border)
-            }
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
-            onFocus={(e) =>
-              (e.currentTarget.style.borderColor = CommonStyle.colors.mainNavy)
-            }
-            onBlur={(e) =>
-              (e.currentTarget.style.borderColor = CommonStyle.colors.border)
-            }
-          />
+    <div style={s.page}>
+      {/* 왼쪽: 브랜드 패널 */}
+      <AuthBrandPanel />
 
-          <button
-            type="submit"
-            style={styles.button}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                CommonStyle.colors.darkNavy)
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                CommonStyle.colors.mainNavy)
-            }
-          >
-            Sign In
-          </button>
-        </form>
+      {/* 오른쪽: 로그인 폼 */}
+      <main style={s.formSide}>
+        <div style={s.formBox}>
+          <h1 style={s.title}>로그인</h1>
+          <p style={s.subtitle}>ZCS 계정으로 로그인하세요.</p>
 
-        <div style={styles.divider}>
-          <span style={styles.dividerLine} />
-          <span>또는</span>
-          <span style={styles.dividerLine} />
+          <form onSubmit={handleLogin} style={s.form}>
+            <label style={s.field}>
+              <span style={s.label}>아이디</span>
+              <input
+                type="text"
+                placeholder="아이디를 입력하세요"
+                autoComplete="username"
+                value={id}
+                onChange={(e) => setId(e.target.value)}
+                onFocus={() => setFocused("id")}
+                onBlur={() => setFocused(null)}
+                style={{ ...s.input, ...(focused === "id" ? s.inputFocus : {}) }}
+              />
+            </label>
+
+            <label style={s.field}>
+              <span style={s.label}>비밀번호</span>
+              <div style={s.inputWrap}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="비밀번호를 입력하세요"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setFocused("password")}
+                  onBlur={() => setFocused(null)}
+                  style={{
+                    ...s.input,
+                    paddingRight: 44,
+                    ...(focused === "password" ? s.inputFocus : {}),
+                  }}
+                />
+                <button
+                  type="button"
+                  style={s.eyeButton}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </label>
+
+            <button
+              type="submit"
+              style={{ ...s.submit, ...(isSubmitHover ? s.submitHover : {}) }}
+              onMouseEnter={() => setIsSubmitHover(true)}
+              onMouseLeave={() => setIsSubmitHover(false)}
+            >
+              로그인
+            </button>
+          </form>
+
+          <div style={s.linkRow}>
+            <button type="button" style={s.linkButton} onClick={() => navigation("/find-id")}>
+              아이디 찾기
+            </button>
+            <span>|</span>
+            <button type="button" style={s.linkButton} onClick={() => navigation("/forgot-password")}>
+              비밀번호 재설정
+            </button>
+          </div>
+
+          {/* 구글 클라이언트 ID가 있을 때만 (로컬에 .env 없으면 빈 칸만 남아서) */}
+          {hasGoogleLogin && (
+            <>
+              <div style={s.divider}>
+                <span style={s.dividerLine} />
+                <span>또는</span>
+                <span style={s.dividerLine} />
+              </div>
+
+              {/* 구글 로그인 버튼이 그려지는 자리 (위 useEffect에서 렌더링) */}
+              <div id="googleSignInDiv" style={{ display: "flex", justifyContent: "center", minHeight: 44 }} />
+            </>
+          )}
+
+          <div style={s.signupRow}>
+            계정이 없으신가요?
+            <button type="button" style={s.signupLink} onClick={() => navigation("/signup")}>
+              회원가입
+            </button>
+          </div>
         </div>
-
-        <div
-          id="googleSignInDiv"
-          style={{ display: "flex", justifyContent: "center" }}
-        />
-
-        <div style={styles.footer}>
-          <span
-            style={{ cursor: "pointer" }}
-            onClick={() => navigation("/find-id")}
-          >
-            아이디 찾기
-          </span>
-          <span style={{ color: CommonStyle.colors.divider }}>|</span>
-          <span
-            style={{ cursor: "pointer" }}
-            onClick={() => navigation("/forgot-password")}
-          >
-            비밀번호 재설정
-          </span>
-          <span style={{ color: CommonStyle.colors.divider }}>|</span>
-          <span
-            onClick={() => navigation("/signup")}
-            style={{
-              cursor: "pointer",
-              fontWeight: "bold",
-              color: CommonStyle.colors.mainNavy,
-            }}
-          >
-            회원가입
-          </span>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Info } from "lucide-react";
 import { fileUploadStyles as s } from "../styles/fileUpload";
+import Topbar from "./IntroduceScreen/Topbar";
 import FileInputBox from "../components/FileDropInput";
 // SbomApi에서 만든 uploadSbomFile 함수 가져오기
 import { uploadSbomFile } from "../services/_private/SbomApi";
@@ -66,25 +68,40 @@ export default function FileUploadScreen() {
   };
 
   return (
-    <section style={s.container}>
+    <main style={s.page}>
+      <Topbar />
+
       <div style={s.content}>
-        <h1 style={s.title}>보안 구성요소 분석</h1>
+        <button type="button" style={s.backButton} onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          뒤로
+        </button>
+        <h1 style={s.title}>파일 분석</h1>
         <p style={s.subTitle}>
-          SBOM/의존성 파일을 업로드하면 구성요소를 식별하고, 알려진
-          취약점(CVE)·라이선스 위험·공급망 리스크를 한 번에 점검합니다.
+          SBOM 또는 프로젝트 ZIP을 업로드하면 오픈소스 구성요소를 식별하고, 알려진
+          취약점(CVE)을 찾아 배포 가능 여부를 판정합니다.
         </p>
+
         {/* FileInputBox에서 파일 선택하면 handleFilesChange 실행 */}
         <FileInputBox
           multiple
+          isUploading={isUploading}
           onFilesChange={handleFilesChange}
           onAnalyze={handleAnalyze}
         />
-        {isUploading && (
-          <div style={{ color: "#4a5568", marginTop: 12 }}>
-            업로드 및 분석 중입니다...
-          </div>
-        )}
+
+        <ul style={s.tips}>
+          <li style={s.tip}>
+            <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+            ZIP으로 올리면 구성요소를 자동으로 추출하고, 수정 버전이 있는 npm 패키지는 자동 수정
+            ZIP을 받을 수 있습니다.
+          </li>
+          <li style={s.tip}>
+            <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+            파일을 여러 개 올리면 모두 업로드한 뒤 분석 히스토리에서 결과를 한 번에 확인합니다.
+          </li>
+        </ul>
       </div>
-    </section>
+    </main>
   );
 }

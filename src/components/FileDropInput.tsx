@@ -1,16 +1,28 @@
 import React, { useMemo, useRef, useState } from "react";
+import { ArrowRight, CloudUpload, FileArchive, FileCode, X } from "lucide-react";
 import { fileUploadStyles as s } from "../styles/fileUpload";
 
 type Props = {
   accept?: string;
   multiple?: boolean;
+  isUploading?: boolean;
   onFilesChange?: (files: File[]) => void;
   onAnalyze?: (files: File[]) => void;
+};
+
+// accept와 맞춘 안내 칩 (형식 추가하면 같이 수정)
+const formats = ["SPDX", "CycloneDX", "JSON · XML · YAML", "ZIP"];
+
+const formatSize = (size: number) => {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / 1024 / 1024).toFixed(2)} MB`;
 };
 
 export default function FileInputBox({
   accept = ".json,.xml,.spdx,.cdx,.yaml,.zip",
   multiple = true,
+  isUploading = false,
   onFilesChange,
   onAnalyze,
 }: Props) {
@@ -75,15 +87,47 @@ export default function FileInputBox({
 
   return (
     <div style={s.dropCard}>
+      {/* 영역 전체를 눌러도 파일 선택 (키보드 Enter/Space도) */}
       <div
         style={zoneStyle}
+        role="button"
+        tabIndex={0}
+        aria-label="분석할 파일 선택"
+        onClick={onPick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onPick();
+          }
+        }}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        <button type="button" style={s.bigBtn} onClick={onPick}>
-          분석 파일 선택 (SBOM / 보고서 / 압축)
+        <div style={s.dropIcon}>
+          <CloudUpload size={28} />
+        </div>
+        <div style={s.dropTitle}>
+          {isDragging ? "여기에 놓으면 추가됩니다" : "파일을 끌어다 놓거나 클릭해서 선택하세요"}
+        </div>
+        <div style={s.dropHelper}>SBOM 파일 또는 프로젝트 압축 파일 · 여러 개 선택 가능</div>
+        <button
+          type="button"
+          style={s.pickButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick();
+          }}
+        >
+          파일 선택
         </button>
+        <div style={s.formatRow}>
+          {formats.map((format) => (
+            <span key={format} style={s.formatChip}>
+              {format}
+            </span>
+          ))}
+        </div>
 
         <input
           ref={inputRef}
@@ -93,40 +137,46 @@ export default function FileInputBox({
           onChange={onInputChange}
           style={{ display: "none" }}
         />
-
-        <div style={s.helper}>또는 파일을 여기로 드래그해서 놓으세요</div>
-        <div style={s.note}>
-          권장 형식: SPDX(.spdx/.json), CycloneDX(.cdx/.xml), 보고서(PDF),
-          압축(ZIP)
-          <br />
-          업로드된 파일은 취약 구성요소 탐지, 라이선스/리스크 점검, 의존성 트리
-          분석에 사용됩니다.
-        </div>
       </div>
 
       {files.length > 0 && (
         <>
+          <div style={s.listHeader}>
+            <span>선택한 파일 {files.length}개</span>
+            <button type="button" style={s.textButton} onClick={clearAll} disabled={isUploading}>
+              전체 비우기
+            </button>
+          </div>
+
           <div style={s.fileList}>
             {files.map((f, idx) => {
               const isLast = idx === files.length - 1;
+              const isZip = f.name.toLowerCase().endsWith(".zip");
               return (
                 <div
                   key={`${f.name}-${f.size}-${idx}`}
                   style={{ ...s.fileRow, ...(isLast ? s.fileRowLast : {}) }}
                 >
+                  <div style={s.fileIcon}>{isZip ? <FileArchive size={18} /> : <FileCode size={18} />}</div>
                   <div style={s.fileMeta}>
-                    <div style={s.fileName}>{f.name}</div>
+                    <div style={s.fileName} title={f.name}>
+                      {f.name}
+                    </div>
                     <div style={s.fileSize}>
-                      {(f.size / 1024 / 1024).toFixed(2)} MB
+                      {formatSize(f.size)} · {isZip ? "프로젝트 압축" : "SBOM"}
                     </div>
                   </div>
 
                   <button
                     type="button"
                     style={s.removeBtn}
+                    aria-label={`${f.name} 제거`}
+                    disabled={isUploading}
                     onClick={() => removeAt(idx)}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    제거
+                    <X size={16} />
                   </button>
                 </div>
               );
@@ -134,15 +184,19 @@ export default function FileInputBox({
           </div>
 
           <div style={s.actionRow}>
-            <button type="button" style={s.secondaryBtn} onClick={clearAll}>
-              전체 비우기
-            </button>
             <button
               type="button"
-              style={s.secondaryBtn}
+              style={{ ...s.primaryBtn, ...(isUploading ? s.primaryBtnDisabled : {}) }}
+              disabled={isUploading}
               onClick={() => onAnalyze?.(files)}
             >
-              분석 시작
+              {isUploading ? (
+                "업로드 및 분석 중..."
+              ) : (
+                <>
+                  {files.length}개 파일 분석 시작 <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </div>
         </>
