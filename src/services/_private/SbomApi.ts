@@ -1,4 +1,5 @@
 import { axiosInstance } from "./ApiConfig";
+import { isLoggedIn } from "../../utils/currentUser";
 
 export type ScanResult = {
   resultSeq: number;
@@ -96,8 +97,9 @@ export type PolicyResult = {
   passedRules: PolicyRuleResult[];
 };
 
-// 회원 정보는 로그인 토큰으로 서버가 알아내므로 membSeq를 따로 보내지 않는다
-export const uploadSbomFile = async (file: File) => {
+// membSeq 파라미터는 더 이상 서버로 보내지 않는다 (호출부 호환을 위해 시그니처만 유지).
+// 서버가 로그인 세션에서 회원을 식별하므로, 여기서 보낸 값은 무시된다.
+export const uploadSbomFile = async (file: File, _membSeq?: number) => {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -137,13 +139,21 @@ export const getPolicyResult = async (fileSeq: string | number) => {
 };
 
 export const downloadFixedZip = async (fileSeq: string | number) => {
+  // 격리 빌드검증 워커가 실제로 npm install/mvn compile을 돌려보는 단계가 추가되면서
+  // 응답이 오래 걸릴 수 있음(워커 자체 빌드 타임아웃만 2분, npm+java 둘 다 있으면 최대 4분+).
+  // 공용 axios 기본 타임아웃(120000ms, ApiConfig.ts)보다 짧으면 백엔드가 아직 처리 중인데도
+  // 프론트가 먼저 포기하고 "만들지 못했습니다" 오류를 띄우는 문제가 있어 이 요청만 넉넉하게 늘림.
   const response = await axiosInstance.get(`/files/${fileSeq}/fixed-zip`, {
     responseType: "blob",
+    timeout: 300000,
   });
   return response;
 };
 
 export const getFileHistory = async () => {
+  if (!isLoggedIn()) throw new Error("로그인이 필요합니다.");
+
+  // membSeq를 쿼리로 보내지 않는다 - 서버가 세션 쿠키로 회원을 식별한다.
   const response = await axiosInstance.get("/files");
   return response.data;
 };
@@ -154,6 +164,8 @@ export const getFileStatus = async (fileSeq: string | number) => {
 };
 
 export const getDashboardSummary = async () => {
+  if (!isLoggedIn()) throw new Error("로그인이 필요합니다.");
+
   const response = await axiosInstance.get("/dashboard/summary");
   return response.data;
 };
