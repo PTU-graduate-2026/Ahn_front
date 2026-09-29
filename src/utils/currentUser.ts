@@ -23,3 +23,11 @@ export const clearCurrentUser = () => {
 export const isLoggedIn = () => {
   return getCurrentMembSeq() !== null;
 };
+
+export const logout = () => {
+  clearCurrentUser();
+  const google = (window as any).google;
+  if (google?.accounts?.id?.disableAutoSelect) {
+    google.accounts.id.disableAutoSelect();
+  }
+};

@@ -1,6 +1,5 @@
 // src/services/Api.config.ts
 
-// 1. 서버 주소를 변수로 선언 (나중에 여기만 고치면 끝!) 현재 내 인텔주소
 export const BASE_URL = import.meta.env.PROD
   ? "/api"
   : "http://localhost:18080/api";
@@ -27,10 +26,27 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error?.response?.status === 401 && isLoggedIn()) {
       clearCurrentUser();
-      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname !== "/login"
+      ) {
         window.location.href = "/login";
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
+
+// axios 오류에서 백엔드가 보낸 메시지를 꺼낸다 (blob 응답도 처리) — useScanResult.ts에서 사용
+export const getErrorMessage = async (error: any, fallback: string) => {
+  const data = error?.response?.data;
+  if (data instanceof Blob) {
+    try {
+      const parsed = JSON.parse(await data.text());
+      return parsed?.message || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return data?.message || fallback;
+};

@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import CommonStyle from "../../styles/CommonStyle";
+import { ArrowLeft, CircleAlert, CircleCheck } from "lucide-react";
 import { findIdApiCall } from "../../services/_private/FindId/FindIdApi";
+import { authStyles as s } from "../../styles/auth";
+import AuthBrandPanel from "./AuthBrandPanel";
 
 export default function FindId() {
   const navigate = useNavigate();
@@ -34,132 +36,118 @@ export default function FindId() {
     }
   };
 
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: CommonStyle.colors.background,
-      fontFamily: "sans-serif",
-    },
-    card: {
-      width: "100%",
-      maxWidth: "400px",
-      padding: "50px 40px",
-      backgroundColor: CommonStyle.colors.white,
-      borderRadius: CommonStyle.Radius.card,
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
-      textAlign: "center" as const,
-    },
-    title: {
-      fontSize: "28px",
-      fontWeight: "900",
-      color: CommonStyle.colors.mainNavy,
-      marginBottom: "10px",
-    },
-    subtitle: {
-      fontSize: "14px",
-      color: CommonStyle.colors.textGray,
-      marginBottom: "30px",
-      lineHeight: 1.5,
-    },
-    input: {
-      width: "100%",
-      padding: "16px",
-      marginBottom: "12px",
-      backgroundColor: CommonStyle.colors.white,
-      border: `1px solid ${CommonStyle.colors.border}`,
-      borderRadius: CommonStyle.Radius.input,
-      color: CommonStyle.colors.mainNavy,
-      fontSize: "16px",
-      outline: "none",
-      boxSizing: "border-box" as const,
-    },
-    button: {
-      width: "100%",
-      padding: "16px",
-      backgroundColor: CommonStyle.colors.mainNavy,
-      color: "white",
-      border: "none",
-      borderRadius: CommonStyle.Radius.button,
-      fontSize: "16px",
-      fontWeight: "bold",
-      cursor: "pointer",
-      marginTop: "10px",
-    },
-    resultBox: {
-      padding: "20px",
-      backgroundColor: CommonStyle.colors.background,
-      borderRadius: CommonStyle.Radius.input,
-      marginBottom: "20px",
-    },
-    resultId: {
-      fontSize: "20px",
-      fontWeight: "900",
-      color: CommonStyle.colors.mainNavy,
-      marginTop: "8px",
-    },
-    backLink: {
-      marginTop: "24px",
-      fontSize: "14px",
-      color: CommonStyle.colors.textGray,
-      cursor: "pointer",
-      display: "block",
-    },
-  };
+  // 화면 표시용 상태 (포커스된 입력칸)
+  const [focused, setFocused] = useState<string | null>(null);
+  const inputStyle = (field: string) => ({ ...s.input, ...(focused === field ? s.inputFocus : {}) });
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>아이디 찾기</h1>
+    <div style={s.page}>
+      <AuthBrandPanel />
 
-        {result ? (
-          result.found ? (
-            <div style={styles.resultBox}>
-              <p style={styles.subtitle}>회원님의 아이디입니다.</p>
-              <p style={styles.resultId}>{result.maskedId}</p>
-            </div>
+      <main style={s.formSide}>
+        <div style={s.formBox}>
+          <button type="button" style={s.backLink} onClick={() => navigate("/login")}>
+            <ArrowLeft size={16} />
+            로그인으로
+          </button>
+          <h1 style={s.title}>아이디 찾기</h1>
+
+          {result ? (
+            <>
+              <p style={s.subtitle}>입력하신 정보로 조회한 결과입니다.</p>
+              {result.found ? (
+                <div style={s.resultBox}>
+                  <div style={{ ...s.resultIcon, background: "#dcfce7", color: "#16a34a" }}>
+                    <CircleCheck size={26} />
+                  </div>
+                  <div style={s.resultTitle}>회원님의 아이디입니다</div>
+                  <div style={s.resultValue}>{result.maskedId}</div>
+                  <p style={s.resultText}>개인정보 보호를 위해 아이디 일부는 가려서 보여드립니다.</p>
+                </div>
+              ) : (
+                <div style={s.resultBox}>
+                  <div style={{ ...s.resultIcon, background: "#fef3c7", color: "#b45309" }}>
+                    <CircleAlert size={26} />
+                  </div>
+                  <div style={s.resultTitle}>일치하는 회원 정보가 없습니다</div>
+                  <p style={s.resultText}>이름과 이메일을 다시 확인해주세요.</p>
+                </div>
+              )}
+
+              <div style={s.buttonStack}>
+                <button type="button" style={s.submit} onClick={() => navigate("/login")}>
+                  로그인하기
+                </button>
+                {result.found ? (
+                  <button type="button" style={s.secondaryButton} onClick={() => navigate("/forgot-password")}>
+                    비밀번호 재설정
+                  </button>
+                ) : (
+                  <button type="button" style={s.secondaryButton} onClick={() => setResult(null)}>
+                    다시 찾기
+                  </button>
+                )}
+              </div>
+            </>
           ) : (
-            <p style={styles.subtitle}>
-              일치하는 회원 정보를 찾을 수 없습니다.
-              <br />
-              이름과 이메일을 다시 확인해주세요.
-            </p>
-          )
-        ) : (
-          <>
-            <p style={styles.subtitle}>
-              가입 시 입력한 이름과 이메일을 입력해주세요.
-            </p>
-            <input
-              type="text"
-              placeholder="이름"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={styles.input}
-            />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-            />
-            <button
-              style={{ ...styles.button, opacity: loading ? 0.6 : 1 }}
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? "확인 중..." : "아이디 찾기"}
-            </button>
-          </>
-        )}
+            <>
+              <p style={s.subtitle}>가입 시 입력한 이름과 이메일을 입력해주세요.</p>
+              {/* form으로 감싸서 Enter로도 제출 */}
+              <form
+                style={s.form}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+              >
+                <label style={s.field}>
+                  <span style={s.label}>이름</span>
+                  <input
+                    type="text"
+                    placeholder="홍길동"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={() => setFocused("name")}
+                    onBlur={() => setFocused(null)}
+                    style={inputStyle("name")}
+                  />
+                </label>
+                <label style={s.field}>
+                  <span style={s.label}>이메일</span>
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setFocused("email")}
+                    onBlur={() => setFocused(null)}
+                    style={inputStyle("email")}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  style={{ ...s.submit, ...(loading ? s.submitDisabled : {}) }}
+                  disabled={loading}
+                >
+                  {loading ? "확인 중..." : "아이디 찾기"}
+                </button>
+              </form>
+            </>
+          )}
 
-        <span style={styles.backLink} onClick={() => navigate("/login")}>
-          로그인으로 돌아가기
-        </span>
-      </div>
+          {/* 결과 화면에는 같은 버튼이 이미 있어서 입력 화면에서만 */}
+          {!result && (
+            <div style={s.signupRow}>
+              비밀번호를 잊으셨나요?
+              <button type="button" style={s.signupLink} onClick={() => navigate("/forgot-password")}>
+                비밀번호 재설정
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
