@@ -24,6 +24,7 @@ export const isLoggedIn = () => {
   return getCurrentMembSeq() !== null;
 };
 
+// 브라우저에 남은 로그인 표시만 지운다. 서버 세션 삭제는 logoutApiCall(services/_private/Auth/LogoutApi.ts)이 한다.
 export const logout = () => {
   clearCurrentUser();
   const google = (window as any).google;
