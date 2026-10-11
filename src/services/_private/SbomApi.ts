@@ -158,6 +158,12 @@ export const getFileHistory = async () => {
   return response.data;
 };
 
+// 분석 기록 삭제 - 서버가 세션으로 본인 파일인지 확인한 뒤 결과/구성요소까지 함께 지운다.
+export const deleteFile = async (fileSeq: string | number) => {
+  const response = await axiosInstance.delete(`/files/${fileSeq}`);
+  return response.data;
+};
+
 export const getFileStatus = async (fileSeq: string | number) => {
   const response = await axiosInstance.get(`/files/${fileSeq}/status`);
   return response.data;
