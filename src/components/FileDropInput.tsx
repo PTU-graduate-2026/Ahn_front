@@ -20,7 +20,7 @@ const formatSize = (size: number) => {
 };
 
 export default function FileInputBox({
-  accept = ".json,.xml,.spdx,.cdx,.yaml,.zip",
+  accept = ".json,.xml,.spdx,.cdx,.yaml,.yml,.zip",
   multiple = true,
   isUploading = false,
   onFilesChange,
