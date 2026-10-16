@@ -1,0 +1,21 @@
+name: ZCS 자동 검증 (npm)
+
+# ZeroCheck SBOM이 이 PR을 열면서 자동으로 추가한 워크플로우입니다.
+# 이 저장소에 기존 CI가 없어서, 버전을 올린 의존성이 실제로 설치/빌드되는지 확인합니다.
+on:
+  pull_request:
+    branches:
+      - "dev"
+
+jobs:
+  zcs-verify-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 의존성 설치 확인
+        run: npm install
+      - name: 빌드 확인 (build 스크립트가 있는 경우만 실행)
+        run: npm run build --if-present
