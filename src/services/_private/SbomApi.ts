@@ -51,6 +51,11 @@ export type FileHistoryItem = {
   policyDecision?: "BLOCK" | "REVIEW" | "PASS" | string;
   policyDecisionLabel?: string;
   policySummary?: string;
+  sourceType?: "UPLOAD" | "GITHUB" | string;
+  repoFullName?: string | null;
+  repoBranch?: string | null;
+  repoCommitSha?: string | null;
+  prevFileSeq?: number | null;
 };
 
 export type FileStatus = {
@@ -60,6 +65,14 @@ export type FileStatus = {
   uploadDate?: string;
   scanCount?: number;
   componentCount?: number;
+  sourceType?: "UPLOAD" | "GITHUB" | string;
+  repoFullName?: string | null;
+  repoBranch?: string | null;
+  repoCommitSha?: string | null;
+  prevFileSeq?: number | null;
+  // "다시 분석" 기록이면 직전 분석의 취약점 수 / 커밋 (수정 전·후 비교용)
+  prevScanCount?: number;
+  prevCommitSha?: string | null;
 };
 
 export type DashboardSummary = {

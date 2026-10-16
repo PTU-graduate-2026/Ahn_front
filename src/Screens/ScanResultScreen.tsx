@@ -13,6 +13,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ComponentTable } from "../components/scan/ComponentTable";
 import { CriticalAlertBanner } from "../components/scan/CriticalAlertBanner";
 import { FixPlanPanel } from "../components/scan/FixPlanPanel";
+import { GithubSourceBar } from "../components/scan/GithubSourceBar";
 import { LoadingState } from "../components/scan/LoadingState";
 import { PolicyDecisionPanel } from "../components/scan/PolicyDecisionPanel";
 import { PriorityFixes } from "../components/scan/PriorityFixes";
@@ -151,6 +152,8 @@ export default function ScanResultScreen() {
           </section>
         ) : (
           <>
+            <GithubSourceBar fileSeq={fileSeq ?? ""} />
+
             <CriticalAlertBanner criticalCount={criticalCount} />
 
             <RiskOverview

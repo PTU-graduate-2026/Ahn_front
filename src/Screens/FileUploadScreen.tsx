@@ -1,16 +1,21 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, FolderGit2, Info, Upload } from "lucide-react";
 import { fileUploadStyles as s } from "../styles/fileUpload";
 import Topbar from "./IntroduceScreen/Topbar";
 import FileInputBox from "../components/FileDropInput";
+import { GithubImportPanel } from "../components/GithubImportPanel";
 // SbomApi에서 만든 uploadSbomFile 함수 가져오기
 import { uploadSbomFile } from "../services/_private/SbomApi";
 import { isLoggedIn } from "../utils/currentUser";
 
+type InputMode = "file" | "github";
+
 export default function FileUploadScreen() {
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
+  // 입력 방식: 파일 직접 업로드 / GitHub 저장소 가져오기
+  const [mode, setMode] = useState<InputMode>("file");
 
   const handleFilesChange = (files: File[]) => {
     // 파일 선택했을 때 (아직 업로드 안함)
@@ -67,6 +72,17 @@ export default function FileUploadScreen() {
     }
   };
 
+  const tips =
+    mode === "file"
+      ? [
+          "ZIP으로 올리면 구성요소를 자동으로 추출하고, 수정 버전이 있는 npm·Maven 패키지는 자동 수정 ZIP을 받을 수 있습니다.",
+          "파일을 여러 개 올리면 모두 업로드한 뒤 분석 히스토리에서 결과를 한 번에 확인합니다.",
+        ]
+      : [
+          "자동 수정 PR은 분석한 저장소로만 만들어져, 다른 프로젝트의 버전을 잘못 덮어쓰지 않습니다.",
+          "PR을 머지한 뒤 결과 화면의 \"다시 분석\"을 누르면 최신 코드로 수정 전·후를 비교합니다.",
+        ];
+
   return (
     <main style={s.page}>
       <Topbar />
@@ -78,28 +94,53 @@ export default function FileUploadScreen() {
         </button>
         <h1 style={s.title}>파일 분석</h1>
         <p style={s.subTitle}>
-          SBOM 또는 프로젝트 ZIP을 업로드하면 오픈소스 구성요소를 식별하고, 알려진
-          취약점(CVE)을 찾아 배포 가능 여부를 판정합니다.
+          SBOM 또는 프로젝트 ZIP을 업로드하거나 GitHub 저장소를 가져오면 오픈소스 구성요소를 식별하고,
+          알려진 취약점(CVE)을 찾아 배포 가능 여부를 판정합니다.
         </p>
 
-        {/* FileInputBox에서 파일 선택하면 handleFilesChange 실행 */}
-        <FileInputBox
-          multiple
-          isUploading={isUploading}
-          onFilesChange={handleFilesChange}
-          onAnalyze={handleAnalyze}
-        />
+        <div style={s.tabRow} role="tablist" aria-label="분석 대상 입력 방식">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "file"}
+            style={{ ...s.tab, ...(mode === "file" ? s.tabActive : {}) }}
+            onClick={() => setMode("file")}
+          >
+            <Upload size={15} />
+            파일 업로드
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "github"}
+            style={{ ...s.tab, ...(mode === "github" ? s.tabActive : {}) }}
+            onClick={() => setMode("github")}
+          >
+            <FolderGit2 size={15} />
+            GitHub 저장소
+          </button>
+        </div>
+
+        {mode === "file" ? (
+          /* FileInputBox에서 파일 선택하면 handleFilesChange 실행 */
+          <FileInputBox
+            multiple
+            isUploading={isUploading}
+            onFilesChange={handleFilesChange}
+            onAnalyze={handleAnalyze}
+          />
+        ) : (
+          /* GitHub 저장소를 직접 가져와 분석 (분석 기록에 저장소가 연결됨) */
+          <GithubImportPanel />
+        )}
 
         <ul style={s.tips}>
-          <li style={s.tip}>
-            <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-            ZIP으로 올리면 구성요소를 자동으로 추출하고, 수정 버전이 있는 npm 패키지는 자동 수정
-            ZIP을 받을 수 있습니다.
-          </li>
-          <li style={s.tip}>
-            <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-            파일을 여러 개 올리면 모두 업로드한 뒤 분석 히스토리에서 결과를 한 번에 확인합니다.
-          </li>
+          {tips.map((tip) => (
+            <li key={tip} style={s.tip}>
+              <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+              {tip}
+            </li>
+          ))}
         </ul>
       </div>
     </main>
