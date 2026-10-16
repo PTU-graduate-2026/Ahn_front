@@ -4,8 +4,8 @@ import { introStyles } from "../../styles/introduce";
 // 이용 절차 — 실제 화면 흐름(업로드 → 분석 로딩 → 결과) 기준
 const steps = [
   {
-    title: "파일 업로드",
-    desc: "SBOM(SPDX · CycloneDX) 파일이나 프로젝트 ZIP을 끌어다 놓아 업로드합니다. 여러 파일도 한 번에 올릴 수 있습니다.",
+    title: "파일 업로드 · 저장소 선택",
+    desc: "SBOM(SPDX · CycloneDX) 파일이나 프로젝트 ZIP을 끌어다 놓아 업로드하거나, GitHub 탭에서 분석할 저장소를 고릅니다.",
   },
   {
     title: "구성요소 추출 · 스캔",
@@ -17,7 +17,7 @@ const steps = [
   },
   {
     title: "결과 확인 · 조치",
-    desc: "결과 화면에서 취약점 목록과 수정 버전을 확인하고, 자동 수정 ZIP과 PDF 보고서를 내려받습니다.",
+    desc: "취약점 목록과 수정 버전을 확인하고 자동 수정 ZIP · PR, PDF 보고서로 조치합니다. GitHub 저장소는 PR 머지 후 다시 분석해 결과를 비교할 수 있습니다.",
   },
 ];
 

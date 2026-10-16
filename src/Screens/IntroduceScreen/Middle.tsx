@@ -4,18 +4,18 @@ import { ArrowRight, CircleCheck } from "lucide-react";
 import { middleStyles } from "../../styles/middle";
 import { introStyles } from "../../styles/introduce";
 
-// 수치는 실제 서비스 기준 값만 사용 (심각도 5단계, 정책 판정 3종, 업로드 형식 6종)
+// 수치는 실제 서비스 기준 값만 사용 (분석 방식 2가지, 심각도 5단계, 정책 판정 3종)
 const stats = [
-  { value: "6종", label: "지원 업로드 형식" },
+  { value: "2가지", label: "분석 방식 (파일 업로드 · GitHub)" },
   { value: "5단계", label: "취약점 심각도 분류" },
   { value: "3단계", label: "배포 정책 판정 (PASS·REVIEW·BLOCK)" },
 ];
 
 const checks = [
   "SPDX · CycloneDX 표준 SBOM 파일 분석",
-  "ZIP 프로젝트 업로드 시 구성요소 자동 추출",
-  "npm 취약 패키지 자동 수정 ZIP 제공",
-  "분석 결과 PDF 보고서 다운로드",
+  "GitHub 저장소를 골라 최신 커밋 바로 분석",
+  "npm 취약 패키지 자동 수정 ZIP · GitHub PR",
+  "분석자 정보가 담긴 PDF 보고서 다운로드",
 ];
 
 export default function Middle() {
@@ -39,7 +39,7 @@ export default function Middle() {
           소프트웨어 공급망 보안, 파일 하나로 점검하세요
         </p>
         <p style={middleStyles.subTitle}>
-          SBOM 또는 프로젝트 ZIP을 업로드하면 오픈소스 구성요소를 추출하고,
+          SBOM · 프로젝트 ZIP을 업로드하거나 GitHub 저장소를 고르면 오픈소스 구성요소를 추출하고,
           알려진 취약점(CVE)을 찾아 배포 가능 여부를 판정합니다.
         </p>
 

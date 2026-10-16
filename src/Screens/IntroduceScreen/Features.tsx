@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Boxes, FileText, LayoutDashboard, Scale, ShieldAlert, Wrench } from "lucide-react";
+import { FileText, FolderGit2, LayoutDashboard, Scale, ShieldAlert, Wrench } from "lucide-react";
 import { introStyles } from "../../styles/introduce";
 
 // 핵심 기능 카드 목록 — 항목 추가/수정은 여기만 고치면 됨
 const features = [
   {
-    icon: Boxes,
-    title: "구성요소 자동 추출",
-    desc: "SBOM 파일이나 프로젝트 ZIP에서 사용 중인 오픈소스 패키지와 버전을 자동으로 추출합니다.",
+    icon: FolderGit2,
+    title: "파일 · GitHub 저장소 분석",
+    desc: "SBOM 파일이나 프로젝트 ZIP을 올리거나 GitHub 저장소를 고르면, 사용 중인 오픈소스 패키지와 버전을 자동으로 추출합니다.",
   },
   {
     icon: ShieldAlert,
@@ -21,18 +21,18 @@ const features = [
   },
   {
     icon: Wrench,
-    title: "자동 수정 ZIP",
-    desc: "수정 버전이 있는 npm 패키지는 안전한 버전으로 올린 프로젝트를 ZIP으로 내려받을 수 있습니다.",
+    title: "자동 수정 ZIP · GitHub PR",
+    desc: "수정 버전이 있는 npm 패키지를 안전한 버전으로 올린 프로젝트를 ZIP으로 받거나, GitHub 저장소에 PR로 바로 올릴 수 있습니다.",
   },
   {
     icon: FileText,
     title: "PDF 보고서",
-    desc: "심각도별 통계와 취약점 목록을 담은 분석 보고서를 PDF로 저장해 공유할 수 있습니다.",
+    desc: "분석자 · 생성일시, 심각도별 통계와 취약점 · 구성요소 목록을 담은 보고서를 PDF로 저장해 공유할 수 있습니다.",
   },
   {
     icon: LayoutDashboard,
     title: "대시보드 · 분석 히스토리",
-    desc: "지금까지 분석한 파일의 위험도와 정책 판정 결과를 한 화면에서 모아 보고 다시 확인합니다.",
+    desc: "분석한 파일의 위험도와 정책 판정을 모아 보고, GitHub 저장소는 다시 분석해 수정 전·후 취약점 수를 비교합니다.",
   },
 ];
 
