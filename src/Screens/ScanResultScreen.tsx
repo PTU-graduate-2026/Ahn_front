@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Topbar from "./IntroduceScreen/Topbar";
 import { generatePdfReport } from "../utils/generatePdfReport";
+import { getCurrentUserName } from "../utils/currentUser";
 import { useNavigate, useParams } from "react-router-dom";
 import { ComponentTable } from "../components/scan/ComponentTable";
 import { CriticalAlertBanner } from "../components/scan/CriticalAlertBanner";
@@ -39,7 +40,7 @@ export default function ScanResultScreen() {
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
     try {
-      await generatePdfReport(fileSeq, results, components);
+      await generatePdfReport(fileSeq, results, components, getCurrentUserName());
     } finally {
       setIsGeneratingPdf(false);
     }
