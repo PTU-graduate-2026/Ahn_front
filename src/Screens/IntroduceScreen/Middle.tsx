@@ -1,78 +1,35 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, CircleCheck } from "lucide-react";
-import { middleStyles } from "../../styles/middle";
-import { introStyles } from "../../styles/introduce";
+import type { CSSProperties } from "react";
+import { Link } from "react-router-dom";
 
-// 수치는 실제 서비스 기준 값만 사용 (분석 방식 2가지, 심각도 5단계, 정책 판정 3종)
-const stats = [
-  { value: "2가지", label: "분석 방식 (파일 업로드 · GitHub)" },
-  { value: "5단계", label: "취약점 심각도 분류" },
-  { value: "3단계", label: "배포 정책 판정 (PASS·REVIEW·BLOCK)" },
-];
+// 첫 등장 순서 — CSS에서 --i × 50ms 만큼 늦게 나타남
+const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
-const checks = [
-  "SPDX · CycloneDX 표준 SBOM 파일 분석",
-  "GitHub 저장소를 골라 최신 커밋 바로 분석",
-  "npm 취약 패키지 자동 수정 ZIP · GitHub PR",
-  "분석자 정보가 담긴 PDF 보고서 다운로드",
-];
-
+// 히어로: 브랜드명 · 제목 · 설명 · 버튼만 (파스텔 배경, 가운데 정렬)
 export default function Middle() {
-  const navigate = useNavigate();
-
-  // 핵심 기능 섹션으로 부드럽게 스크롤
-  const scrollToFeatures = () => {
-    document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <section style={middleStyles.container}>
-      <div style={middleStyles.content}>
-        <span style={middleStyles.badge}>
-          <span style={middleStyles.badgeDot} />
-          SBOM 기반 오픈소스 취약점 분석 서비스
-        </span>
-
-        <h1 style={middleStyles.title}>ZERO CHECK - SBOM</h1>
-        <p style={middleStyles.headline}>
-          소프트웨어 공급망 보안, 파일 하나로 점검하세요
+    <section className="intro-hero">
+      <div className="intro-inner intro-hero__body">
+        <p className="intro-hero__label intro-rise" style={rise(0)} translate="no">
+          ZERO CHECK - SBOM
         </p>
-        <p style={middleStyles.subTitle}>
-          SBOM · 프로젝트 ZIP을 업로드하거나 GitHub 저장소를 고르면 오픈소스 구성요소를 추출하고,
-          알려진 취약점(CVE)을 찾아 배포 가능 여부를 판정합니다.
+        <h1 className="intro-hero__title intro-rise" style={rise(1)}>
+          오픈소스 취약점,
+          <br />
+          <em>배포 전에</em> 확인하세요
+        </h1>
+        <p className="intro-hero__lede intro-rise" style={rise(2)}>
+          프로젝트에 들어 있는 오픈소스 패키지를 찾아 알려진 취약점(CVE)과 비교하고, 배포해도 되는지
+          판정합니다.
         </p>
-
-        <div style={middleStyles.buttons}>
+        <div className="intro-hero__actions intro-rise" style={rise(3)}>
           {/* 로그인 안 되어 있으면 ProtectedRoute가 로그인창으로 보냄 */}
-          <button type="button" style={introStyles.primaryButton} onClick={() => navigate("/upload")}>
-            분석 시작하기 <ArrowRight size={18} />
-          </button>
-          <button type="button" style={introStyles.outlineButton} onClick={scrollToFeatures}>
-            기능 알아보기
-          </button>
+          <Link to="/upload" className="intro-btn intro-btn--primary">
+            분석 시작하기
+          </Link>
+          <a href="#stages" className="intro-btn intro-btn--secondary">
+            이용 방법 보기
+          </a>
         </div>
-
-        <div style={middleStyles.statRow}>
-          {stats.map((stat, i) => (
-            <div
-              key={stat.label}
-              style={{ ...middleStyles.stat, ...(i > 0 ? middleStyles.statDivider : {}) }}
-            >
-              <span style={middleStyles.statValue}>{stat.value}</span>
-              <span style={middleStyles.statLabel}>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <ul style={middleStyles.checkList}>
-          {checks.map((text) => (
-            <li key={text} style={middleStyles.checkItem}>
-              <CircleCheck size={18} style={middleStyles.checkIcon} />
-              {text}
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );
