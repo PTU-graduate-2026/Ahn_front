@@ -50,7 +50,7 @@ export const generatePdfReport = async (
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont("NanumGothic");
-  doc.text("SafeLink SBOM 분석 보고서", 14, 13);
+  doc.text("Zero Check SBOM 분석 보고서", 14, 13);
 
   doc.setFontSize(9);
   doc.text(`파일 번호: ${fileSeq ?? "-"}   |   생성일시: ${now}`, 14, 22);
