@@ -68,7 +68,7 @@ export const generatePdfReport = async (
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont(KOREAN_FONT, "normal");
-  doc.text("SafeLink SBOM 분석 보고서", 14, 13);
+  doc.text("Zero Check SBOM 분석 보고서", 14, 13);
 
   doc.setFontSize(9);
   doc.text(
