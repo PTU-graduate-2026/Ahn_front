@@ -3,9 +3,8 @@ name: Deploy Frontend
 on:
   push:
     branches:
-      - gwangyeon7
-      - dev
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
