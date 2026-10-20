@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { styles } from "../../styles/topbar";
 import { getCurrentUserName, isLoggedIn, logout } from "../../utils/currentUser";
 import { WithdrawModal } from "../../components/WithdrawModal";
+import ZcsLogo from "../../components/ZcsLogo";
 import { logoutApiCall } from "../../services/_private/Auth/LogoutApi";
 
 type MenuItem = {
@@ -119,9 +120,7 @@ const Topbar = () => {
         style={{ ...styles.logoSection, background: "none", border: "none", padding: 0, cursor: "pointer" }}
       >
         <div style={styles.logoBox}>
-          <div style={{fontWeight: "bold", fontSize: "40px", color: "#1f4e8c" }}>
-            ZCS
-          </div>
+          <ZcsLogo size={44} />
         </div>
 
         <div style={styles.logoTextContainer}>

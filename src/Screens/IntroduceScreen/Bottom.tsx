@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { bottomStyles } from "../../styles/bottom";
+import ZcsLogo from "../../components/ZcsLogo";
 
 const serviceLinks = [
   { label: "파일 업로드", path: "/upload" },
@@ -14,7 +15,10 @@ export default function Bottom() {
     <footer style={bottomStyles.container}>
       <div style={bottomStyles.inner}>
         <div style={bottomStyles.brand}>
-          <span style={bottomStyles.logo}>ZCS</span>
+          <span style={bottomStyles.logo}>
+            <ZcsLogo size={36} variant="dark" />
+            ZCS
+          </span>
           <p style={bottomStyles.brandDesc}>
             Zero Check SBOM — SBOM 기반 오픈소스 취약점 분석 서비스
           </p>

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { CircleCheck } from "lucide-react";
 import { authStyles as s } from "../../styles/auth";
+import ZcsLogo from "../../components/ZcsLogo";
 
 const brandPoints = [
   "SPDX · CycloneDX SBOM과 프로젝트 ZIP 분석",
@@ -15,7 +16,7 @@ export default function AuthBrandPanel() {
   return (
     <aside style={s.brandPanel}>
       <button type="button" style={s.brandLogo} onClick={() => navigate("/")} aria-label="소개 화면으로 이동">
-        <span style={s.brandMark}>ZCS</span>
+        <ZcsLogo size={44} variant="dark" />
         <span style={s.brandName}>
           Zero Check SBOM
           <br />
