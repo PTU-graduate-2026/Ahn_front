@@ -4,20 +4,37 @@ import type { ScanResult, SbomComponent } from "../services/_private/SbomApi";
 
 const SEVERITY_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NEGLIGIBLE", "UNKNOWN"];
 
-const NANUM_FONT_URL =
-  "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf";
+// 외부 CDN은 403 등으로 실패할 수 있어 public/fonts에 폰트를 번들해서 사용
+const KOREAN_FONT = "NanumGothic";
+const FONT_FILES = [
+  { file: "NanumGothic-Regular.ttf", style: "normal" },
+  { file: "NanumGothic-Bold.ttf", style: "bold" },
+];
 
-async function loadKoreanFont(doc: jsPDF): Promise<void> {
-  const res = await fetch(NANUM_FONT_URL);
-  const buf = await res.arrayBuffer();
-  const bytes = new Uint8Array(buf);
+const fontCache = new Map<string, string>();
+
+async function fetchFontBase64(file: string): Promise<string> {
+  const cached = fontCache.get(file);
+  if (cached) return cached;
+
+  const res = await fetch(`${import.meta.env.BASE_URL}fonts/${file}`);
+  if (!res.ok) throw new Error(`폰트 로드 실패: ${file} (${res.status})`);
+  const bytes = new Uint8Array(await res.arrayBuffer());
   let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
   }
   const base64 = btoa(binary);
-  doc.addFileToVFS("NanumGothic.ttf", base64);
-  doc.addFont("NanumGothic.ttf", "NanumGothic", "normal");
+  fontCache.set(file, base64);
+  return base64;
+}
+
+async function loadKoreanFont(doc: jsPDF): Promise<void> {
+  for (const { file, style } of FONT_FILES) {
+    doc.addFileToVFS(file, await fetchFontBase64(file));
+    doc.addFont(file, KOREAN_FONT, style);
+  }
 }
 
 const severityColor = (severity: string): [number, number, number] => {
@@ -34,6 +51,7 @@ export const generatePdfReport = async (
   fileSeq: string | undefined,
   results: ScanResult[],
   components: SbomComponent[],
+  userName?: string | null,
 ) => {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
@@ -49,17 +67,21 @@ export const generatePdfReport = async (
 
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
-  doc.setFont("NanumGothic");
+  doc.setFont(KOREAN_FONT, "normal");
   doc.text("Zero Check SBOM 분석 보고서", 14, 13);
 
   doc.setFontSize(9);
-  doc.text(`파일 번호: ${fileSeq ?? "-"}   |   생성일시: ${now}`, 14, 22);
+  doc.text(
+    `사용자: ${userName || "-"}   |   파일 번호: ${fileSeq ?? "-"}   |   생성일시: ${now}`,
+    14,
+    22,
+  );
 
   // ── Summary Cards ─────────────────────────────────────────
   let y = 38;
   doc.setTextColor(30, 30, 30);
   doc.setFontSize(11);
-  doc.setFont("NanumGothic");
+  doc.setFont(KOREAN_FONT, "normal");
   doc.text("취약점 요약", 14, y);
   y += 6;
 
@@ -78,10 +100,10 @@ export const generatePdfReport = async (
     doc.roundedRect(x, y, cardW, 16, 2, 2, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
+    doc.setFont(KOREAN_FONT, "bold");
     doc.text(String(counts[sev] ?? 0), x + cardW / 2, y + 8, { align: "center" });
     doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
+    doc.setFont(KOREAN_FONT, "normal");
     doc.text(sev, x + cardW / 2, y + 14, { align: "center" });
   });
 
@@ -90,7 +112,7 @@ export const generatePdfReport = async (
   // Total / Components
   doc.setTextColor(60, 60, 60);
   doc.setFontSize(9);
-  doc.setFont("NanumGothic");
+  doc.setFont(KOREAN_FONT, "normal");
   doc.text(
     `전체 취약점: ${results.length}건   |   전체 구성요소: ${components.length}개`,
     14,
@@ -100,7 +122,7 @@ export const generatePdfReport = async (
 
   // ── Vulnerability Table ───────────────────────────────────
   doc.setFontSize(11);
-  doc.setFont("NanumGothic");
+  doc.setFont(KOREAN_FONT, "normal");
   doc.setTextColor(30, 30, 30);
   doc.text("취약점 상세", 14, y);
   y += 4;
@@ -144,6 +166,7 @@ export const generatePdfReport = async (
         data.cell.styles.fontStyle = "bold";
       }
     },
+    styles: { font: KOREAN_FONT },
     margin: { left: 14, right: 14 },
   });
 
@@ -157,7 +180,7 @@ export const generatePdfReport = async (
   }
 
   doc.setFontSize(11);
-  doc.setFont("NanumGothic");
+  doc.setFont(KOREAN_FONT, "normal");
   doc.setTextColor(30, 30, 30);
   doc.text("구성요소 목록", 14, y2);
   y2 += 4;
@@ -179,6 +202,7 @@ export const generatePdfReport = async (
     },
     bodyStyles: { fontSize: 7.5 },
     alternateRowStyles: { fillColor: [245, 247, 250] },
+    styles: { font: KOREAN_FONT },
     margin: { left: 14, right: 14 },
   });
 
@@ -187,6 +211,7 @@ export const generatePdfReport = async (
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(7);
+    doc.setFont(KOREAN_FONT, "normal");
     doc.setTextColor(150, 150, 150);
     doc.text(
       `SafeLink 보안 분석 보고서  |  ${i} / ${pageCount} 페이지`,

@@ -1,0 +1,85 @@
+# 취약 버전을 의도적으로 포함한 SPDX 2.3 (YAML) 테스트 SBOM
+# 기대 결과: Critical 취약점 + 금지 패키지(log4j-core 2.14.1, minimist 0.0.8) → BLOCK
+spdxVersion: SPDX-2.3
+dataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+name: vulnerable-demo-project
+documentNamespace: https://zerocheck-sbom.store/spdx/vulnerable-demo-project-1
+creationInfo:
+  created: "2026-10-11T00:00:00Z"
+  creators:
+    - "Tool: manual-test-fixture"
+packages:
+  - SPDXID: SPDXRef-Package-log4j-core
+    name: log4j-core
+    versionInfo: 2.14.1
+    supplier: "Organization: Apache Software Foundation"
+    downloadLocation: NOASSERTION
+    filesAnalyzed: false
+    licenseConcluded: Apache-2.0
+    licenseDeclared: Apache-2.0
+    externalRefs:
+      - referenceCategory: PACKAGE-MANAGER
+        referenceType: purl
+        referenceLocator: pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1
+  - SPDXID: SPDXRef-Package-jackson-databind
+    name: jackson-databind
+    versionInfo: 2.9.8
+    supplier: "Organization: FasterXML"
+    downloadLocation: NOASSERTION
+    filesAnalyzed: false
+    licenseConcluded: Apache-2.0
+    licenseDeclared: Apache-2.0
+    externalRefs:
+      - referenceCategory: PACKAGE-MANAGER
+        referenceType: purl
+        referenceLocator: pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.9.8
+  - SPDXID: SPDXRef-Package-lodash
+    name: lodash
+    versionInfo: 4.17.20
+    downloadLocation: NOASSERTION
+    filesAnalyzed: false
+    licenseConcluded: MIT
+    licenseDeclared: MIT
+    externalRefs:
+      - referenceCategory: PACKAGE-MANAGER
+        referenceType: purl
+        referenceLocator: pkg:npm/lodash@4.17.20
+  - SPDXID: SPDXRef-Package-minimist
+    name: minimist
+    versionInfo: 0.0.8
+    downloadLocation: NOASSERTION
+    filesAnalyzed: false
+    licenseConcluded: MIT
+    licenseDeclared: MIT
+    externalRefs:
+      - referenceCategory: PACKAGE-MANAGER
+        referenceType: purl
+        referenceLocator: pkg:npm/minimist@0.0.8
+  - SPDXID: SPDXRef-Package-axios
+    name: axios
+    versionInfo: 0.21.0
+    downloadLocation: NOASSERTION
+    filesAnalyzed: false
+    licenseConcluded: MIT
+    licenseDeclared: MIT
+    externalRefs:
+      - referenceCategory: PACKAGE-MANAGER
+        referenceType: purl
+        referenceLocator: pkg:npm/axios@0.21.0
+relationships:
+  - spdxElementId: SPDXRef-DOCUMENT
+    relationshipType: DESCRIBES
+    relatedSpdxElement: SPDXRef-Package-log4j-core
+  - spdxElementId: SPDXRef-DOCUMENT
+    relationshipType: DESCRIBES
+    relatedSpdxElement: SPDXRef-Package-jackson-databind
+  - spdxElementId: SPDXRef-DOCUMENT
+    relationshipType: DESCRIBES
+    relatedSpdxElement: SPDXRef-Package-lodash
+  - spdxElementId: SPDXRef-DOCUMENT
+    relationshipType: DESCRIBES
+    relatedSpdxElement: SPDXRef-Package-minimist
+  - spdxElementId: SPDXRef-DOCUMENT
+    relationshipType: DESCRIBES
+    relatedSpdxElement: SPDXRef-Package-axios

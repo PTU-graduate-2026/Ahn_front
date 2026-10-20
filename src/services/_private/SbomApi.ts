@@ -51,6 +51,11 @@ export type FileHistoryItem = {
   policyDecision?: "BLOCK" | "REVIEW" | "PASS" | string;
   policyDecisionLabel?: string;
   policySummary?: string;
+  sourceType?: "UPLOAD" | "GITHUB" | string;
+  repoFullName?: string | null;
+  repoBranch?: string | null;
+  repoCommitSha?: string | null;
+  prevFileSeq?: number | null;
 };
 
 export type FileStatus = {
@@ -60,6 +65,14 @@ export type FileStatus = {
   uploadDate?: string;
   scanCount?: number;
   componentCount?: number;
+  sourceType?: "UPLOAD" | "GITHUB" | string;
+  repoFullName?: string | null;
+  repoBranch?: string | null;
+  repoCommitSha?: string | null;
+  prevFileSeq?: number | null;
+  // "다시 분석" 기록이면 직전 분석의 취약점 수 / 커밋 (수정 전·후 비교용)
+  prevScanCount?: number;
+  prevCommitSha?: string | null;
 };
 
 export type DashboardSummary = {
@@ -155,6 +168,12 @@ export const getFileHistory = async () => {
 
   // membSeq를 쿼리로 보내지 않는다 - 서버가 세션 쿠키로 회원을 식별한다.
   const response = await axiosInstance.get("/files");
+  return response.data;
+};
+
+// 분석 기록 삭제 - 서버가 세션으로 본인 파일인지 확인한 뒤 결과/구성요소까지 함께 지운다.
+export const deleteFile = async (fileSeq: string | number) => {
+  const response = await axiosInstance.delete(`/files/${fileSeq}`);
   return response.data;
 };
 

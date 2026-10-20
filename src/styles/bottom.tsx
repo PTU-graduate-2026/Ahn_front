@@ -26,6 +26,9 @@ export const bottomStyles: Record<string, CSSProperties> = {
     maxWidth: "440px",
   },
   logo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
     fontSize: "28px",
     fontWeight: 800,
     color: "#ffffff",

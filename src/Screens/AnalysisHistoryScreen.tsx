@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, LayoutDashboard, Plus, Search } from "lucide-react";
+import { ChevronRight, LayoutDashboard, Plus, Search, Trash2, X } from "lucide-react";
 import {
   FileHistoryItem,
   getFileHistory,
 } from "../services/_private/SbomApi";
+import { DeleteFileModal } from "../components/DeleteFileModal";
 import Topbar from "./IntroduceScreen/Topbar";
 import { StackedBar } from "../components/charts/StackedBar";
 import { severitySeries } from "../styles/scanCharts";
@@ -62,6 +63,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     cursor: "pointer",
     fontFamily: font,
+  },
+  // 선택 모드일 때 "선택 취소" 버튼 (선택 줄과 같은 파란 톤)
+  selectModeButtonActive: {
+    border: "1px solid #bfdbfe",
+    background: "#eff6ff",
+    color: "#173357",
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
   },
   primaryButton: {
     display: "inline-flex",
@@ -274,6 +285,74 @@ const styles: Record<string, React.CSSProperties> = {
     height: 10,
     borderRadius: 3,
   },
+  // 선택한 항목이 있을 때 표 위에 뜨는 줄 (N개 선택됨 | 선택 해제 | 선택 삭제)
+  selectionBar: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "10px 22px",
+    background: "#eff6ff",
+    borderBottom: "1px solid #bfdbfe",
+  },
+  selectionCount: {
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#173357",
+  },
+  selectionClear: {
+    background: "none",
+    border: "none",
+    padding: 0,
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: 700,
+    textDecoration: "underline",
+    cursor: "pointer",
+    fontFamily: font,
+  },
+  selectionDelete: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    marginLeft: "auto",
+    height: 32,
+    padding: "0 12px",
+    borderRadius: 8,
+    border: "1px solid #dc2626",
+    background: "#dc2626",
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: font,
+  },
+  // 체크박스 칸 (칸 전체가 클릭 영역)
+  checkCell: {
+    padding: "12px 0 12px 22px",
+    textAlign: "left",
+    cursor: "pointer",
+  },
+  checkbox: {
+    width: 16,
+    height: 16,
+    margin: 0,
+    cursor: "pointer",
+    accentColor: "#173357",
+    verticalAlign: "middle",
+  },
+  checkboxDisabled: {
+    cursor: "not-allowed",
+    opacity: 0.4,
+  },
+  // 행 오른쪽 결과 보기 버튼
+  iconButton: {
+    background: "none",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    padding: 4,
+    display: "inline-flex",
+  },
   empty: {
     padding: "48px 22px",
     color: "#64748b",
@@ -334,6 +413,45 @@ const fileSegments = (item: FileHistoryItem) => [
   { key: "Low", label: "Low", value: item.lowCount ?? 0, color: severitySeries[3].color },
 ];
 
+const isSelectable = (item: FileHistoryItem) => item.status !== "ANALYZING";
+
+// 체크박스 ("일부만 선택"인 전체 선택 체크박스는 indeterminate(–) 표시. HTML 속성이 아니라서 ref로 넣는다)
+function SelectCheckbox({
+  checked,
+  indeterminate = false,
+  disabled = false,
+  title,
+  onChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  indeterminate?: boolean;
+  disabled?: boolean;
+  title?: string;
+  onChange: () => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = indeterminate;
+  }, [indeterminate]);
+
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={checked}
+      disabled={disabled}
+      title={title}
+      onChange={onChange}
+      // 칸(td/th) 클릭 처리와 겹쳐서 두 번 토글되지 않게 막는다
+      onClick={(e) => e.stopPropagation()}
+      aria-label={ariaLabel}
+      style={{ ...styles.checkbox, ...(disabled ? styles.checkboxDisabled : {}) }}
+    />
+  );
+}
+
 export default function AnalysisHistoryScreen() {
   const navigate = useNavigate();
   const [items, setItems] = useState<FileHistoryItem[]>([]);
@@ -342,6 +460,12 @@ export default function AnalysisHistoryScreen() {
   const [query, setQuery] = useState("");
   const [policyFilter, setPolicyFilter] = useState<PolicyFilter>("ALL");
   const [sortKey, setSortKey] = useState<SortKey>("latest");
+  // 삭제 확인 모달을 띄운 파일들 ("선택 삭제"로 고른 것)
+  const [deleteTargets, setDeleteTargets] = useState<FileHistoryItem[] | null>(null);
+  // "항목 삭제" 버튼을 눌러 체크박스가 보이는 선택 모드인지
+  const [selectMode, setSelectMode] = useState(false);
+  // 체크박스로 선택한 파일 번호
+  const [selectedSeqs, setSelectedSeqs] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -406,6 +530,42 @@ export default function AnalysisHistoryScreen() {
   const maxFindings = Math.max(...visibleItems.map((item) => item.totalFindings ?? 0), 1);
   const openResult = (fileSeq: number) => navigate(`/scan-result/${fileSeq}`);
 
+  // 검색/필터로 화면에서 숨겨진 파일은 선택돼 있어도 지우지 않도록, 지금 보이는 것 중 선택된 것만 대상으로 한다
+  // 분석 중인 파일은 서버가 삭제를 거부하므로 처음부터 선택/삭제할 수 없게 한다
+  const selectableItems = visibleItems.filter(isSelectable);
+  const selectedItems = selectableItems.filter((item) => selectedSeqs.has(item.fileSeq));
+  const allSelected = selectableItems.length > 0 && selectedItems.length === selectableItems.length;
+  const someSelected = selectedItems.length > 0 && !allSelected;
+
+  const toggleSelect = (fileSeq: number) => {
+    setSelectedSeqs((prev) => {
+      const next = new Set(prev);
+      if (next.has(fileSeq)) next.delete(fileSeq);
+      else next.add(fileSeq);
+      return next;
+    });
+  };
+
+  // 전체 선택: 지금 보이는 목록 중 선택 가능한 파일 기준
+  const toggleSelectAll = () => {
+    if (selectableItems.length === 0) return;
+    setSelectedSeqs(allSelected ? new Set() : new Set(selectableItems.map((item) => item.fileSeq)));
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedSeqs(new Set());
+  };
+
+  const handleDeleted = (fileSeqs: number[]) => {
+    const deleted = new Set(fileSeqs);
+    setItems((prev) => prev.filter((i) => !deleted.has(i.fileSeq)));
+    const remaining = new Set([...selectedSeqs].filter((seq) => !deleted.has(seq)));
+    setSelectedSeqs(remaining);
+    // 선택한 걸 전부 지웠으면 선택 모드도 끝낸다 (일부 실패하면 실패한 것만 선택된 채로 남겨둠)
+    if (selectMode && remaining.size === 0) setSelectMode(false);
+  };
+
   const renderBody = () => {
     if (isLoading) return <div style={styles.empty}>분석 이력을 불러오는 중입니다.</div>;
     if (errorMessage) return <div style={styles.empty}>{errorMessage}</div>;
@@ -414,14 +574,60 @@ export default function AnalysisHistoryScreen() {
 
     return (
       <>
+        {selectMode && (
+          <div style={styles.selectionBar}>
+            <span style={styles.selectionCount}>
+              {selectedItems.length > 0 ? `${selectedItems.length}개 선택됨` : "삭제할 항목을 선택하세요"}
+            </span>
+            {selectedItems.length > 0 && (
+              <button type="button" style={styles.selectionClear} onClick={() => setSelectedSeqs(new Set())}>
+                선택 해제
+              </button>
+            )}
+            <button
+              type="button"
+              style={{
+                ...styles.selectionDelete,
+                ...(selectedItems.length === 0 ? styles.buttonDisabled : {}),
+              }}
+              onClick={() => setDeleteTargets(selectedItems)}
+              disabled={selectedItems.length === 0}
+            >
+              <Trash2 size={15} />
+              선택 삭제
+            </button>
+          </div>
+        )}
+
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={{ ...styles.th, width: "30%" }}>파일</th>
-              <th style={{ ...styles.th, width: "17%" }}>업로드일</th>
+              {selectMode && (
+                <th
+                  style={{
+                    ...styles.th,
+                    ...styles.checkCell,
+                    width: "5%",
+                    cursor: selectableItems.length === 0 ? "default" : "pointer",
+                  }}
+                  onClick={toggleSelectAll}
+                >
+                  <SelectCheckbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    disabled={selectableItems.length === 0}
+                    title={selectableItems.length === 0 ? "선택할 수 있는 파일이 없습니다" : undefined}
+                    onChange={toggleSelectAll}
+                    ariaLabel="전체 선택"
+                  />
+                </th>
+              )}
+              {/* 체크박스 칸이 없을 땐 그만큼 파일 칸을 넓힌다 */}
+              <th style={{ ...styles.th, width: selectMode ? "27%" : "32%" }}>파일</th>
+              <th style={{ ...styles.th, width: "16%" }}>업로드일</th>
               <th style={{ ...styles.th, width: "10%" }}>구성요소</th>
               <th style={{ ...styles.th, width: "24%" }}>취약점</th>
-              <th style={{ ...styles.th, width: "13%" }}>정책 판정</th>
+              <th style={{ ...styles.th, width: "12%" }}>정책 판정</th>
               <th style={{ ...styles.th, width: "6%" }} aria-label="결과 보기" />
             </tr>
           </thead>
@@ -429,14 +635,38 @@ export default function AnalysisHistoryScreen() {
             {visibleItems.map((item) => {
               const statusChip = getStatusChip(item.status);
               const total = item.totalFindings ?? 0;
+              const selectable = isSelectable(item);
+              const isSelected = selectable && selectedSeqs.has(item.fileSeq);
+              const rowBackground = isSelected ? "#eff6ff" : "transparent";
               return (
                 <tr
                   key={item.fileSeq}
-                  style={styles.row}
-                  onClick={() => openResult(item.fileSeq)}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafc")}
-                  onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+                  style={{ ...styles.row, background: rowBackground }}
+                  // 선택 모드에서는 행을 눌러도 결과 화면으로 가지 않고 선택만 바뀐다 (분석 중이면 아무 동작 없음)
+                  onClick={() => {
+                    if (!selectMode) openResult(item.fileSeq);
+                    else if (selectable) toggleSelect(item.fileSeq);
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = isSelected ? "#dbeafe" : "#f8fafc")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = rowBackground)}
                 >
+                  {selectMode && (
+                    <td
+                      style={{ ...styles.td, ...styles.checkCell, cursor: selectable ? "pointer" : "default" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectable) toggleSelect(item.fileSeq);
+                      }}
+                    >
+                      <SelectCheckbox
+                        checked={isSelected}
+                        disabled={!selectable}
+                        title={selectable ? undefined : "분석 중인 파일은 선택할 수 없습니다"}
+                        onChange={() => toggleSelect(item.fileSeq)}
+                        ariaLabel={`${item.fileName} 선택`}
+                      />
+                    </td>
+                  )}
                   <td style={styles.td}>
                     <div style={styles.fileName}>
                       <span style={styles.fileNameText} title={item.fileName}>
@@ -480,7 +710,7 @@ export default function AnalysisHistoryScreen() {
                     <button
                       type="button"
                       aria-label={`${item.fileName} 결과 보기`}
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "inline-flex" }}
+                      style={styles.iconButton}
                       onClick={(e) => {
                         e.stopPropagation();
                         openResult(item.fileSeq);
@@ -525,6 +755,20 @@ export default function AnalysisHistoryScreen() {
             <button type="button" style={styles.button} onClick={() => navigate("/dashboard")}>
               <LayoutDashboard size={16} />
               대시보드
+            </button>
+            {/* 누르면 체크박스가 나타나는 선택 모드로 전환, 선택 모드에서는 "선택 취소"로 바뀐다 */}
+            <button
+              type="button"
+              style={{
+                ...styles.button,
+                ...(selectMode ? styles.selectModeButtonActive : {}),
+                ...(items.length === 0 ? styles.buttonDisabled : {}),
+              }}
+              onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+              disabled={!selectMode && items.length === 0}
+            >
+              {selectMode ? <X size={16} /> : <Trash2 size={16} />}
+              {selectMode ? "선택 취소" : "항목 삭제"}
             </button>
             <button type="button" style={styles.primaryButton} onClick={() => navigate("/upload")}>
               <Plus size={16} />
@@ -577,6 +821,14 @@ export default function AnalysisHistoryScreen() {
           {renderBody()}
         </section>
       </div>
+
+      {deleteTargets && (
+        <DeleteFileModal
+          files={deleteTargets}
+          onClose={() => setDeleteTargets(null)}
+          onDeleted={handleDeleted}
+        />
+      )}
     </main>
   );
 }

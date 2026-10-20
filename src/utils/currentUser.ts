@@ -1,3 +1,5 @@
+import { clearGithubToken } from "./githubTokenStore";
+
 const MEMBER_SEQ_KEY = "zcs_memb_seq";
 const MEMBER_NAME_KEY = "zcs_memb_name";
 
@@ -18,12 +20,14 @@ export const getCurrentUserName = () => {
 export const clearCurrentUser = () => {
   window.localStorage.removeItem(MEMBER_SEQ_KEY);
   window.localStorage.removeItem(MEMBER_NAME_KEY);
+  clearGithubToken(); // 로그아웃·세션 만료 시 메모리에 남은 GitHub 토큰도 함께 버린다
 };
 
 export const isLoggedIn = () => {
   return getCurrentMembSeq() !== null;
 };
 
+// 브라우저에 남은 로그인 표시만 지운다. 서버 세션 삭제는 logoutApiCall(services/_private/Auth/LogoutApi.ts)이 한다.
 export const logout = () => {
   clearCurrentUser();
   const google = (window as any).google;

@@ -37,6 +37,36 @@ export const getGithubRepos = async (token: string) => {
   return response.data;
 };
 
+export type GithubAnalyzeResult = {
+  fileSeq: number;
+  fileName: string;
+  status: string;
+  repoFullName: string;
+  repoBranch: string;
+  repoCommitSha: string;
+  prevFileSeq?: number | null;
+};
+
+// 저장소를 직접 가져와 분석 시작 (기본 브랜치 최신 커밋 기준)
+export const analyzeGithubRepo = async (repoFullName: string, token: string) => {
+  const response = await axiosInstance.post(
+    "/github/analyze",
+    { repoFullName },
+    githubTokenHeader(token),
+  );
+  return response.data;
+};
+
+// GitHub에서 가져온 분석 기록을 저장소의 현재 최신 커밋으로 다시 분석 (새 기록이 만들어짐)
+export const reanalyzeGithubRepo = async (fileSeq: string | number, token: string) => {
+  const response = await axiosInstance.post(
+    `/files/${fileSeq}/github-reanalyze`,
+    {},
+    githubTokenHeader(token),
+  );
+  return response.data;
+};
+
 export const createGithubPr = async (
   fileSeq: string | number,
   repoFullName: string,

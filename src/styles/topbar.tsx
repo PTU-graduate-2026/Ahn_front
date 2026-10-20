@@ -20,13 +20,10 @@ export const styles: Record<string, React.CSSProperties> = {
   logoSection: {
     display: "flex",
     alignItems: "center",
-    gap: "15px",
+    gap: "10px",
   },
   logoBox: {
-    padding: "5px 8px",
-    fontWeight: "bold",
-    fontSize: "50px",
-    color: "#282e4c",
+    display: "flex",
   },
   logoTextContainer: {
     display: "flex",

@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { styles } from "../../styles/topbar";
 import { getCurrentUserName, isLoggedIn, logout } from "../../utils/currentUser";
+import { WithdrawModal } from "../../components/WithdrawModal";
+import ZcsLogo from "../../components/ZcsLogo";
+import { logoutApiCall } from "../../services/_private/Auth/LogoutApi";
 
 type MenuItem = {
   label: string;
@@ -18,6 +21,7 @@ const Topbar = () => {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   // 드롭다운은 한 번에 하나만 열리도록 state 하나로 관리
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
 
   // 메뉴 바깥을 클릭하면 드롭다운 닫기
@@ -35,8 +39,15 @@ const Topbar = () => {
   const toggleMenu = (menu: Exclude<OpenMenu, null>) =>
     setOpenMenu((prev) => (prev === menu ? null : menu));
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // 서버 세션을 먼저 끊고, 그다음 브라우저의 로그인 표시를 지운다.
+    const serverLoggedOut = await logoutApiCall();
     logout();
+    if (!serverLoggedOut) {
+      alert(
+        "서버와 연결되지 않아 로그아웃이 완전히 처리되지 않았을 수 있습니다.\n공용 PC라면 브라우저를 완전히 종료해주세요.",
+      );
+    }
     setLoggedIn(false); // 소개화면에서는 그대로 있고 메뉴만 "로그인"으로 바뀜
     // 대시보드 등 로그인 전용 화면에서 로그아웃하면 로그인 화면으로
     if (location.pathname !== "/" && location.pathname !== "/intro") {
@@ -49,10 +60,17 @@ const Topbar = () => {
     alert("개인정보 수정 기능은 준비 중입니다.");
   };
 
-  // TODO: 백엔드에 회원 탈퇴 API 생기면 호출 후 logout() 처리
+  // 회원 탈퇴: 확인 모달을 열고, 탈퇴가 끝나면 로그인 표시를 지우고 첫 화면으로 보낸다.
   const handleWithdraw = () => {
-    if (!window.confirm("정말 탈퇴하시겠습니까?")) return;
-    alert("회원 탈퇴 기능은 준비 중입니다.");
+    setShowWithdrawModal(true);
+  };
+
+  const handleWithdrawn = (message: string) => {
+    setShowWithdrawModal(false);
+    logout(); // 서버 세션은 탈퇴 API가 이미 끊었고, 여기선 브라우저의 로그인 표시만 지운다
+    setLoggedIn(false);
+    alert(message);
+    navigate("/");
   };
 
   // 드롭다운 메뉴 목록 — 항목 추가/수정은 여기만 고치면 됨
@@ -102,9 +120,7 @@ const Topbar = () => {
         style={{ ...styles.logoSection, background: "none", border: "none", padding: 0, cursor: "pointer" }}
       >
         <div style={styles.logoBox}>
-          <div style={{fontWeight: "bold", fontSize: "40px", color: "#1f4e8c" }}>
-            ZCS
-          </div>
+          <ZcsLogo size={44} />
         </div>
 
         <div style={styles.logoTextContainer}>
@@ -151,6 +167,13 @@ const Topbar = () => {
           <span style={styles.login}onClick={() => navigate("/login")}>로그인</span>
         )}
       </nav>
+
+      {showWithdrawModal && (
+        <WithdrawModal
+          onClose={() => setShowWithdrawModal(false)}
+          onWithdrawn={handleWithdrawn}
+        />
+      )}
     </header>
   );
 };
