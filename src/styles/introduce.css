@@ -4,7 +4,7 @@
  * hero: centred single column (user request, ref medibom.kr) · pastel lavender-blue wash + soft top-right glow
  * F4 step knobs: numbering=01/02/03, layout=vertical stack, connector=line
  * F3 spec knobs: columns=2, rule density=every row, numbers=tabular
- * motion: hero stagger (300ms, 50ms) · step reveal when badge crosses 62% of viewport (segment arrow fill 380ms → badge fill + ring · card slide · chip stagger 45ms, once) · faq answer drop (200ms) · press scale 0.97
+ * motion: hero stagger (300ms, 50ms) · highlights cards rise 90ms stagger + art pieces (fade/slide/pop/draw, lens sweep 1100ms), once · step reveal when badge crosses 62% of viewport (segment arrow fill 380ms → badge fill + ring · card slide · chip stagger 45ms, once) · faq answer drop (200ms) · press scale 0.97
  * nav: existing Topbar (shared, untouched) · footer: existing Bottom (untouched) · enrichment: none (typography only)
  * contrast: pass (40–41) · honest: pass (46) · chrome: pass (47) · tokens: pass (48) · mobile: pass (34, 49–51)
  * palette/type source: ui-ux-pro-max "Trust & Authority" + "Korean Modern"
@@ -82,6 +82,11 @@ body {
   --delay-chip: 420ms;
   --stagger-chip: 45ms;
   --dur-seg: 380ms;
+  /* 핵심 기능 카드 등장 */
+  --stagger-card: 90ms;
+  --art-lead: 220ms; /* 카드가 뜬 뒤 그림이 시작되기까지 */
+  --stagger-art: 70ms;
+  --dur-sweep: 1100ms;
 
   font-family: var(--font-body);
   color: var(--color-ink);
@@ -231,6 +236,121 @@ body {
   gap: var(--space-xs);
   margin-top: var(--space-lg);
 }
+
+/* ── 핵심 기능: 그림 카드 2×2 ── */
+.intro-hl {
+  padding-block: var(--space-3xl) 0;
+}
+.intro-hl + .intro-stages {
+  padding-top: var(--space-2xl);
+}
+.intro-hl__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+.intro-hl__card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-sm) var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.intro-hl__art {
+  margin-bottom: var(--space-md);
+  border-radius: calc(var(--radius-card) - 4px);
+  background: var(--color-step-panel);
+  overflow: hidden;
+}
+.intro-hl__art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.intro-hl__card h3 {
+  margin: 0 var(--space-2xs) var(--space-2xs);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.intro-hl__card p {
+  margin: 0 var(--space-2xs);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: var(--color-ink-2);
+}
+/* 카드에 마우스를 올리면 돋보기가 목록 위를 훑고 지나감 */
+.intro-hl__lens {
+  transition: transform var(--dur-draw) var(--ease-in-out);
+}
+@media (hover: hover) {
+  .intro-hl__card:hover .intro-hl__lens {
+    transform: translateX(-120px);
+  }
+}
+
+/* 등장: 카드가 차례로 떠오르고(90ms 간격) → 카드 안 그림 조각이 --k 순서로 나타남 (한 번만) */
+.intro-hl__card {
+  --card-delay: calc(var(--i, 0) * var(--stagger-card));
+}
+.intro-hl__grid[data-reveal="on"] .intro-hl__card:not([data-shown]) {
+  opacity: 0;
+}
+.intro-hl__card[data-shown] {
+  animation: intro-hl-rise var(--dur-pop) var(--ease-out) var(--card-delay) backwards;
+}
+.intro-hl__card[data-shown] :is(.ill-in, .ill-from-left, .ill-from-right, .ill-pop, .ill-draw, .ill-sweep) {
+  animation-duration: var(--dur-pop);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: backwards;
+  animation-delay: calc(var(--card-delay) + var(--art-lead) + var(--k, 0) * var(--stagger-art));
+}
+.ill-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.intro-hl__card[data-shown] .ill-in { animation-name: intro-ill-in; }
+.intro-hl__card[data-shown] .ill-from-left { animation-name: intro-ill-left; }
+.intro-hl__card[data-shown] .ill-from-right { animation-name: intro-ill-right; }
+.intro-hl__card[data-shown] .ill-pop { animation-name: intro-ill-pop; }
+.intro-hl__card[data-shown] .ill-draw {
+  animation-name: intro-ill-draw;
+  stroke-dasharray: 1;
+}
+.intro-hl__card[data-shown] .ill-sweep {
+  animation-name: intro-ill-sweep;
+  animation-duration: var(--dur-sweep);
+  animation-timing-function: var(--ease-in-out);
+}
+
+/* 그림 색 — 모두 토큰에서 */
+.ill-surface { fill: var(--color-surface); }
+.ill-line { stroke: var(--color-rule-strong); stroke-width: 1.5; }
+.ill-soft { fill: var(--color-accent-soft); }
+.ill-ink { fill: var(--color-ink-2); }
+.ill-mute { fill: var(--color-rule-strong); }
+.ill-accent { fill: var(--color-accent); }
+.ill-on-accent { fill: var(--color-on-strong); font-family: var(--font-body); }
+.ill-accent-line { fill: none; stroke: var(--color-accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ill-on-accent-line { fill: none; stroke: var(--color-on-strong); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.ill-thick { stroke-width: 6; }
+.ill-glass { fill: var(--color-surface); fill-opacity: 0.7; }
+.ill-dash { fill: none; stroke: var(--color-rule-strong); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.ill-pass { fill: var(--color-pass); }
+.ill-pass-line { stroke: var(--color-pass); stroke-width: 1.5; }
+.ill-block { fill: var(--color-block); }
+.ill-review-text { fill: var(--color-review); font-family: var(--font-body); }
+.ill-block-text { fill: var(--color-block); font-family: var(--font-body); }
+.ill-ink-text { fill: var(--color-ink); font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+.ill-accent-text { fill: var(--color-accent); font-family: var(--font-body); }
+.ill-sev-critical { fill: var(--color-sev-critical); }
+.ill-sev-high { fill: var(--color-sev-high); }
+.ill-sev-medium { fill: var(--color-sev-medium); }
+.ill-sev-low { fill: var(--color-sev-low); }
 
 /* ── 단계 (01 → 04, 세로 연결선) ── */
 .intro-stages {
@@ -633,6 +753,54 @@ body {
     transform: translateY(8px);
   }
 }
+@keyframes intro-hl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes intro-ill-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes intro-ill-left {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+@keyframes intro-ill-right {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+@keyframes intro-ill-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes intro-ill-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+/* 돋보기가 목록 왼쪽에서 오른쪽 제자리까지 훑고 지나감 */
+@keyframes intro-ill-sweep {
+  from {
+    opacity: 0;
+    transform: translateX(-150px);
+  }
+  20% {
+    opacity: 1;
+  }
+}
 @keyframes intro-step-nudge {
   from {
     opacity: 0;
@@ -698,12 +866,18 @@ body {
 }
 
 /* 앵커로 이동할 때 상단바에 가리지 않게 */
+.intro-hl,
 .intro-stages,
 .intro-spec {
   scroll-margin-top: var(--space-2xl);
 }
 
 /* ── 반응형 ── */
+@media (max-width: 720px) {
+  .intro-hl__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 @media (max-width: 900px) {
   .intro-step__card {
     grid-template-columns: minmax(0, 1fr);
@@ -719,6 +893,9 @@ body {
   .intro-stages,
   .intro-faq {
     padding-block: var(--space-2xl) var(--space-xl);
+  }
+  .intro-hl {
+    padding-top: var(--space-2xl);
   }
   .intro-track {
     --rail-gutter: 60px;
@@ -744,6 +921,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .intro-btn,
   .intro-faq__icon,
+  .intro-hl__lens,
   .intro-step__link::before,
   .intro-step__seg::before,
   .intro-step__seg::after,
@@ -756,6 +934,8 @@ body {
   }
   .intro-rise,
   .intro-faq__a:not([hidden]),
+  .intro-hl__card[data-shown],
+  .intro-hl__card[data-shown] :is(.ill-in, .ill-from-left, .ill-from-right, .ill-pop, .ill-draw, .ill-sweep),
   .intro-step[data-shown] :is(.intro-step__card, .intro-step__body, .intro-step__out, .intro-chip, .intro-step__num-label, .intro-step__num-digit) {
     animation: intro-fade 150ms ease backwards;
     animation-delay: 0ms;
