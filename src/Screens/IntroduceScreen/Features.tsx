@@ -23,7 +23,7 @@ export default function Features() {
       <div className="intro-inner">
         <div className="intro-head">
           <h2>지원 범위</h2>
-          <p>지금 분석하고 처리할 수 있는 항목입니다.</p>
+          <p>분석 후 처리 가능한 항목들</p>
         </div>
 
         <dl className="intro-spec__table">
