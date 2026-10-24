@@ -4,10 +4,13 @@ import {
   LayoutDashboard,
   RotateCcw,
   FileDown,
+  Mail,
   Wrench,
 } from "lucide-react";
 import Topbar from "./IntroduceScreen/Topbar";
-import { generatePdfReport } from "../utils/generatePdfReport";
+import { buildPdfReport, generatePdfReport } from "../utils/generatePdfReport";
+import { sendReportMail } from "../services/_private/SbomApi";
+import { getErrorMessage } from "../services/_private/ApiConfig";
 import { getCurrentUserName } from "../utils/currentUser";
 import { useNavigate, useParams } from "react-router-dom";
 import { ComponentTable } from "../components/scan/ComponentTable";
@@ -36,6 +39,7 @@ export default function ScanResultScreen() {
   const { fileSeq } = useParams();
   const navigate = useNavigate();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isSendingMail, setIsSendingMail] = useState(false);
   const [showFixPlan, setShowFixPlan] = useState(false);
 
   const handleDownloadPdf = async () => {
@@ -44,6 +48,21 @@ export default function ScanResultScreen() {
       await generatePdfReport(fileSeq, results, components, getCurrentUserName());
     } finally {
       setIsGeneratingPdf(false);
+    }
+  };
+
+  // 내려받기와 같은 PDF를 만들어 첨부 → 서버가 로그인한 본인 이메일로 보냄
+  const handleSendMail = async () => {
+    if (!fileSeq) return;
+    setIsSendingMail(true);
+    try {
+      const doc = await buildPdfReport(fileSeq, results, components, getCurrentUserName());
+      const response = await sendReportMail(fileSeq, doc.output("blob"));
+      alert(response.message);
+    } catch (err) {
+      alert(await getErrorMessage(err, "메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요."));
+    } finally {
+      setIsSendingMail(false);
     }
   };
   const {
@@ -127,6 +146,15 @@ export default function ScanResultScreen() {
             >
               <FileDown size={16} />
               {isGeneratingPdf ? "생성 중..." : "PDF 리포트"}
+            </button>
+            <button
+              type="button"
+              style={styles.button}
+              onClick={handleSendMail}
+              disabled={isSendingMail || loading}
+            >
+              <Mail size={16} />
+              {isSendingMail ? "보내는 중..." : "메일로 보내기"}
             </button>
             <button
               type="button"

@@ -47,7 +47,8 @@ const severityColor = (severity: string): [number, number, number] => {
   }
 };
 
-export const generatePdfReport = async (
+// PDF 문서를 만들어 돌려줌 — 내려받기(generatePdfReport)와 메일 첨부(ScanResultScreen)가 같이 씀
+export const buildPdfReport = async (
   fileSeq: string | undefined,
   results: ScanResult[],
   components: SbomComponent[],
@@ -221,5 +222,15 @@ export const generatePdfReport = async (
     );
   }
 
+  return doc;
+};
+
+export const generatePdfReport = async (
+  fileSeq: string | undefined,
+  results: ScanResult[],
+  components: SbomComponent[],
+  userName?: string | null,
+) => {
+  const doc = await buildPdfReport(fileSeq, results, components, userName);
   doc.save(`safelink-report-${fileSeq ?? "unknown"}.pdf`);
 };

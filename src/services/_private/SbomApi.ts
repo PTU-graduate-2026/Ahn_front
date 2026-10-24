@@ -163,6 +163,14 @@ export const downloadFixedZip = async (fileSeq: string | number) => {
   return response;
 };
 
+// 결과 화면에서 만든 PDF 보고서를 첨부해 로그인한 본인 이메일로 보냄 (받는 주소는 서버가 세션으로 정함)
+export const sendReportMail = async (fileSeq: string | number, report: Blob) => {
+  const form = new FormData();
+  form.append("report", report, `zerocheck-report-${fileSeq}.pdf`);
+  const response = await axiosInstance.post(`/files/${fileSeq}/report-mail`, form);
+  return response.data as { success: boolean; message: string; data?: { to: string } };
+};
+
 export const getFileHistory = async () => {
   if (!isLoggedIn()) throw new Error("로그인이 필요합니다.");
 
