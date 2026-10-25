@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "어떤 파일을 업로드할 수 있나요?",
-    a: "SPDX(.spdx, .json), CycloneDX(.cdx, .xml), YAML(.yaml, .yml) 형식의 SBOM 파일과 프로젝트 압축 파일(.zip)을 업로드할 수 있습니다. ZIP을 올리면 구성요소를 자동으로 추출합니다.",
+    a: "세 가지 방식으로 올릴 수 있습니다. ① SBOM 파일: SPDX(.spdx, .json, .yaml), CycloneDX(.json, .xml, .cdx, .yaml, .yml) ② 의존성 파일 하나: package-lock.json, yarn.lock, pnpm-lock.yaml, requirements.txt, Pipfile.lock, poetry.lock, pom.xml, gradle.lockfile, go.mod, Cargo.lock, Gemfile.lock, composer.lock, .jar ③ 프로젝트 압축 파일(.zip). 의존성 파일과 ZIP은 서버가 SBOM을 자동으로 만들어 분석합니다. package.json이나 build.gradle은 버전 정보가 부족해 단독으로는 분석할 수 없으니 lock 파일이나 ZIP으로 올려주세요.",
   },
   {
     q: "GitHub 저장소를 바로 분석할 수 있나요?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "자동 수정 ZIP은 어떤 경우에 받을 수 있나요?",
-    a: "ZIP 파일로 업로드했고, 수정 버전이 존재하는 npm 패키지가 있을 때 해당 패키지를 안전한 버전으로 올린 프로젝트를 ZIP으로 내려받을 수 있습니다.",
+    a: "프로젝트를 ZIP 파일로 업로드했고, 수정 버전이 존재하는 npm 또는 Maven 패키지가 있을 때 해당 패키지를 안전한 버전으로 올린 프로젝트를 ZIP으로 내려받을 수 있습니다. SBOM이나 의존성 파일 하나만 올린 경우에는 수정안 목록과 GitHub PR을 이용해주세요.",
   },
   {
     q: "로그인이 필요한가요?",
