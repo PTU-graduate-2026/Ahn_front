@@ -22,3 +22,8 @@
 | package.json | package-lock.json(또는 yarn.lock)을 올려달라는 안내 |
 | build.gradle | gradle.lockfile을 올려달라는 안내 |
 | notes.txt | 지원하지 않는 파일 형식입니다 |
+
+## empty/ — 구성요소 0개 (취약점 없음과 구분돼야 정상)
+| 파일 | 내용 | 기대 결과 |
+|---|---|---|
+| no-dependency-project.zip | main.py, README.md만 있음 | 히스토리 "구성요소 없음" 칩 · 정책 "-" · 결과 화면 "분석할 구성요소를 찾지 못했습니다" |

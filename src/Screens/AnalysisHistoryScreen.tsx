@@ -264,6 +264,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   analyzingChip: { background: "#dbeafe", color: "#1d4ed8" },
   failedChip: { background: "#fee2e2", color: "#991b1b" },
+  emptyChip: { background: "#f1f5f9", color: "#475569" },
 
   legend: {
     display: "flex",
@@ -398,10 +399,14 @@ const getPolicyChipStyle = (decision?: string) => {
   return {};
 };
 
-// 분석이 끝나지 않은 파일만 상태 칩 표시
-const getStatusChip = (status?: string) => {
-  if (status === "ANALYZING") return { label: "분석 중", style: styles.analyzingChip };
-  if (status === "FAILED") return { label: "실패", style: styles.failedChip };
+// 분석이 끝나지 않았거나, 끝났지만 구성요소를 못 찾은 파일만 상태 칩 표시
+// (구성요소 0개 + 취약점 0건은 "발견 없음"이 아니라 검사할 대상이 없었던 것)
+const getStatusChip = (item: FileHistoryItem) => {
+  if (item.status === "ANALYZING") return { label: "분석 중", style: styles.analyzingChip };
+  if (item.status === "FAILED") return { label: "실패", style: styles.failedChip };
+  if ((item.componentCount ?? 0) === 0 && (item.totalFindings ?? 0) === 0) {
+    return { label: "구성요소 없음", style: styles.emptyChip };
+  }
   return null;
 };
 
@@ -633,7 +638,7 @@ export default function AnalysisHistoryScreen() {
           </thead>
           <tbody>
             {visibleItems.map((item) => {
-              const statusChip = getStatusChip(item.status);
+              const statusChip = getStatusChip(item);
               const total = item.totalFindings ?? 0;
               const selectable = isSelectable(item);
               const isSelected = selectable && selectedSeqs.has(item.fileSeq);
