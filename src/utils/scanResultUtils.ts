@@ -105,7 +105,8 @@ export const getFixGuide = (item: ScanResult) => {
 export const sortBySeverity = (results: ScanResult[]) =>
   [...results].sort(
     (a, b) =>
-      (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99),
+      (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99) ||
+      (b.cvssScore ?? -1) - (a.cvssScore ?? -1),
   );
 
 export const countBySeverity = (results: ScanResult[]) =>

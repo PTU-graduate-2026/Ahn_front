@@ -40,7 +40,7 @@ export function PriorityFixes({ topFixes }: PriorityFixesProps) {
                     color: color.text,
                   }}
                 >
-                  {item.severity}
+                  {item.cvssScore != null ? `${Number(item.cvssScore).toFixed(1)} · ${item.severity}` : item.severity}
                 </span>
               </div>
               {/* 현재 버전 → 권장 버전 */}

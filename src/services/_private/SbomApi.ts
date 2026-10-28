@@ -11,6 +11,7 @@ export type ScanResult = {
   pkgType?: string;
   pkgVersion: string;
   severity: string;
+  cvssScore?: number | null;
   fixedVer?: string;
   scanDt?: string;
 };

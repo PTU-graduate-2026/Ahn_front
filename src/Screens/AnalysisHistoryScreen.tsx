@@ -496,6 +496,33 @@ export default function AnalysisHistoryScreen() {
     };
   }, []);
 
+  // 분석 중인 파일이 있으면 3초마다 조용히(로딩 표시 없이) 목록을 다시 불러와서,
+  // 새로고침하지 않아도 "분석 중"이 완료/실패로 바뀐다. 분석 중인 파일이 없으면 멈춘다.
+  const hasAnalyzing = items.some((item) => item.status === "ANALYZING");
+  const [pollTick, setPollTick] = useState(0);
+
+  useEffect(() => {
+    if (!hasAnalyzing) return;
+    let cancelled = false;
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        const response = await getFileHistory();
+        const history = response?.data?.files ?? response?.data ?? [];
+        if (!cancelled && Array.isArray(history)) setItems(history);
+      } catch {
+        // 일시적인 오류는 무시하고 다음 주기에 다시 시도한다
+      } finally {
+        if (!cancelled) setPollTick((tick) => tick + 1);
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
+  }, [hasAnalyzing, pollTick]);
+
   // 탭마다 몇 건인지 (검색어는 반영, 정책 필터는 반영 안 함)
   const searchedItems = useMemo(() => {
     const keyword = query.trim().toLowerCase();
