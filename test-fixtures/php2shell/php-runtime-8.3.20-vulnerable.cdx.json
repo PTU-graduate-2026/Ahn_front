@@ -1,0 +1,32 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-28T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "manual-test-fixture"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "name": "php2shell-vulnerable-runtime",
+      "version": "1.0.0",
+      "bom-ref": "php2shell-vulnerable-runtime"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "bom-ref": "php@8.3.20",
+      "name": "php",
+      "version": "8.3.20",
+      "cpe": "cpe:2.3:a:php:php:8.3.20:*:*:*:*:*:*:*",
+      "purl": "pkg:generic/php@8.3.20"
+    }
+  ]
+}

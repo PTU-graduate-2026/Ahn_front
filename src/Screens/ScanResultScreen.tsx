@@ -89,8 +89,8 @@ export default function ScanResultScreen() {
     [components, vulnerableComponentKeys],
   );
   const riskStatus = useMemo(
-    () => getRiskStatus(counts, results.length),
-    [counts, results.length],
+    () => getRiskStatus(counts, results.length, components.length),
+    [counts, results.length, components.length],
   );
   const { autoFixPlan, manualFixPlan } = useMemo(
     () => splitFixPlan(fixPlan),
@@ -205,6 +205,7 @@ export default function ScanResultScreen() {
             <ComponentTable
               components={components}
               vulnerableComponentKeys={vulnerableComponentKeys}
+              results={results}
             />
 
             {showFixPlan && (

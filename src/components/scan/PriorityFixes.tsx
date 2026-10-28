@@ -1,7 +1,8 @@
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import type { ScanResult } from "../../services/_private/SbomApi";
 import { scanResultStyles as styles } from "../../styles/scanResult";
-import { getFixGuide, severityColors } from "../../utils/scanResultUtils";
+import { getFixGuide, isKnownExploited, severityColors } from "../../utils/scanResultUtils";
+import { CvssBadge, KevBadge } from "./RiskScore";
 
 type PriorityFixesProps = {
   topFixes: ScanResult[];
@@ -42,6 +43,8 @@ export function PriorityFixes({ topFixes }: PriorityFixesProps) {
                 >
                   {item.severity}
                 </span>
+                {item.cvssScore != null && <CvssBadge score={item.cvssScore} version={item.cvssVersion} />}
+                {isKnownExploited(item) && <KevBadge />}
               </div>
               {/* 현재 버전 → 권장 버전 */}
               <div
