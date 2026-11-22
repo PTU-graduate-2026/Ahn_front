@@ -7,6 +7,7 @@ import FileUploadScreen from "../Screens/FileUploadScreen";
 import ScanResultScreen from "../Screens/ScanResultScreen";
 import AnalysisHistoryScreen from "../Screens/AnalysisHistoryScreen";
 import ScanLoadingScreen from "../Screens/ScanLoadingScreen";
+import MultiScanLoadingScreen from "../Screens/MultiScanLoadingScreen";
 import DashboardScreen from "../Screens/DashboardScreen";
 import SignUp from "../Screens/LoginScreen/signup";
 import ForgotPassword from "../Screens/LoginScreen/ForgotPassword";
@@ -46,6 +47,14 @@ export default function Router() {
           element={
             <ProtectedRoute>
               <DashboardScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scan-loading"
+          element={
+            <ProtectedRoute>
+              <MultiScanLoadingScreen />
             </ProtectedRoute>
           }
         />

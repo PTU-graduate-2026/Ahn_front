@@ -1,16 +1,21 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import type { SbomComponent } from "../../services/_private/SbomApi";
+import type { SbomComponent, ScanResult } from "../../services/_private/SbomApi";
 import { scanResultStyles as styles } from "../../styles/scanResult";
+import { buildComponentRiskMap, formatEpss } from "../../utils/scanResultUtils";
+import { CvssBadge, KevBadge } from "./RiskScore";
 
 type ComponentTableProps = {
   components: SbomComponent[];
   vulnerableComponentKeys: Set<string>;
+  /** 구성요소별 위험 점수(CVSS·EPSS·KEV) 계산용 */
+  results?: ScanResult[];
 };
 
 export function ComponentTable({
   components,
   vulnerableComponentKeys,
+  results = [],
 }: ComponentTableProps) {
   const [query, setQuery] = useState("");
   const [onlyVulnerable, setOnlyVulnerable] = useState(false);
@@ -18,15 +23,24 @@ export function ComponentTable({
   const isVulnerable = (item: SbomComponent) =>
     vulnerableComponentKeys.has(`${item.pkgName}@${item.pkgVersion ?? ""}`);
 
-  // 취약한 구성요소를 위로, 검색어·필터 적용
+  // 패키지@버전 → 그 패키지 취약점 중 가장 높은 CVSS / EPSS, 실제 악용 여부
+  const riskMap = useMemo(() => buildComponentRiskMap(results), [results]);
+  const riskOf = (item: SbomComponent) => riskMap.get(`${item.pkgName}@${item.pkgVersion ?? ""}`);
+
+  // 취약한 구성요소를 위로 (그 안에서는 실제 악용 → CVSS 높은 순), 검색어·필터 적용
   const visible = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     return components
       .filter((item) => !onlyVulnerable || isVulnerable(item))
       .filter((item) => !keyword || item.pkgName?.toLowerCase().includes(keyword))
-      .sort((a, b) => Number(isVulnerable(b)) - Number(isVulnerable(a)));
+      .sort(
+        (a, b) =>
+          Number(isVulnerable(b)) - Number(isVulnerable(a)) ||
+          Number(riskOf(b)?.kev ?? false) - Number(riskOf(a)?.kev ?? false) ||
+          (riskOf(b)?.maxCvss ?? -1) - (riskOf(a)?.maxCvss ?? -1),
+      );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [components, vulnerableComponentKeys, query, onlyVulnerable]);
+  }, [components, vulnerableComponentKeys, query, onlyVulnerable, riskMap]);
 
   const vulnerableCount = components.filter(isVulnerable).length;
 
@@ -36,7 +50,8 @@ export function ComponentTable({
         <div>
           <h2 style={styles.sectionHeading}>구성요소 목록</h2>
           <p style={styles.sectionDescription}>
-            SBOM에서 식별된 전체 구성요소입니다. 취약점이 연결된 항목이 위에 표시됩니다.
+            SBOM에서 식별된 전체 구성요소입니다. 취약점이 연결된 항목이 위에 표시되고, 위험 점수는
+            그 패키지 취약점 중 가장 높은 CVSS 점수입니다.
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -94,6 +109,7 @@ export function ComponentTable({
           <thead>
             <tr>
               <th style={{ ...styles.th, width: 90 }}>상태</th>
+              <th style={{ ...styles.th, width: 150 }}>위험 점수</th>
               <th style={styles.th}>패키지</th>
               <th style={styles.th}>버전</th>
               <th style={styles.th}>타입</th>
@@ -103,20 +119,21 @@ export function ComponentTable({
           <tbody>
             {components.length === 0 ? (
               <tr>
-                <td style={{ ...styles.td, color: "#64748b", textAlign: "center", padding: 32 }} colSpan={5}>
+                <td style={{ ...styles.td, color: "#64748b", textAlign: "center", padding: 32 }} colSpan={6}>
                   저장된 구성요소가 없습니다. ZIP 파일을 다시 업로드하거나, SBOM
                   파일에 components 항목이 있는지 확인하세요.
                 </td>
               </tr>
             ) : visible.length === 0 ? (
               <tr>
-                <td style={{ ...styles.td, color: "#64748b", textAlign: "center", padding: 32 }} colSpan={5}>
+                <td style={{ ...styles.td, color: "#64748b", textAlign: "center", padding: 32 }} colSpan={6}>
                   조건에 맞는 구성요소가 없습니다.
                 </td>
               </tr>
             ) : (
               visible.map((item) => {
                 const vulnerable = isVulnerable(item);
+                const risk = riskOf(item);
 
                 return (
                   <tr key={item.componentSeq}>
@@ -142,6 +159,26 @@ export function ComponentTable({
                         />
                         {vulnerable ? "취약" : "안전"}
                       </span>
+                    </td>
+                    <td style={styles.td}>
+                      {risk ? (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <CvssBadge score={risk.maxCvss} version={risk.cvssVersion} />
+                            {risk.kev && <KevBadge />}
+                          </div>
+                          <span style={{ fontSize: 11, color: "#64748b" }}>
+                            취약점 {risk.findingCount}건
+                            {risk.maxEpss != null && (
+                              <span title="EPSS: 앞으로 30일 안에 실제로 악용될 확률">
+                                {" "}· 악용 확률 {formatEpss(risk.maxEpss)}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ color: "#94a3b8" }}>-</span>
+                      )}
                     </td>
                     <td style={styles.td}>
                       <div style={styles.componentName}>

@@ -9,7 +9,7 @@ const font =
 
 // 인라인 스타일로는 keyframes를 못 만들어서 <style>로 넣음
 // (움직임 줄이기 설정한 사용자는 애니메이션 끔)
-const animationCss = `
+export const animationCss = `
 @keyframes zcs-spin { to { transform: rotate(360deg); } }
 @keyframes zcs-slide { 0% { left: -40%; } 100% { left: 100%; } }
 @media (prefers-reduced-motion: reduce) {
@@ -17,7 +17,7 @@ const animationCss = `
 }
 `;
 
-const styles: Record<string, React.CSSProperties> = {
+export const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background: "#f4f6f9",
@@ -194,7 +194,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
-const formatElapsed = (seconds: number) =>
+export const formatElapsed = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 export default function ScanLoadingScreen() {

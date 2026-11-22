@@ -1,6 +1,10 @@
 import { AlertTriangle, ChevronDown, ChevronUp, Download, GitPullRequest, Wrench } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
-import type { FixPlanItem } from "../../services/_private/SbomApi";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  getFileStatus,
+  type FileStatus,
+  type FixPlanItem,
+} from "../../services/_private/SbomApi";
 import { scanResultStyles as styles } from "../../styles/scanResult";
 import { GithubPrModal } from "./GithubPrModal";
 
@@ -124,7 +128,30 @@ export function FixPlanPanel({
   onDownload,
 }: FixPlanPanelProps) {
   const [isGithubModalOpen, setIsGithubModalOpen] = useState(false);
-  const isDownloadDisabled = autoFixPlan.length === 0 || isDownloading;
+  // 수정된 ZIP은 프로젝트 ZIP(직접 업로드 / GitHub 저장소)으로 분석했을 때만 만들 수 있다.
+  // SBOM·의존성 파일 하나만 올린 경우엔 고칠 프로젝트가 없어서 서버도 거절함.
+  // 파일 정보를 아직 못 가져왔으면(null) 막지 않는다 → 서버가 최종 판단.
+  const [isProjectZip, setIsProjectZip] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setIsProjectZip(null);
+    if (fileSeq === "") return;
+    getFileStatus(fileSeq)
+      .then((data) => {
+        const status = (data?.data as FileStatus | undefined) ?? undefined;
+        if (cancelled || !status) return;
+        const name = (status.fileName ?? "").toLowerCase();
+        setIsProjectZip(status.sourceType === "GITHUB" || name.endsWith(".zip"));
+      })
+      .catch(() => {
+        // 못 가져오면 기존처럼 버튼을 열어둔다.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fileSeq]);
+  const isZipUnavailable = isProjectZip === false;
+  const isDownloadDisabled = autoFixPlan.length === 0 || isDownloading || isZipUnavailable;
   const isGithubPrDisabled = autoFixPlan.length === 0;
 
   const autoGroups = useMemo(() => groupFixPlan(autoFixPlan, "auto"), [autoFixPlan]);
@@ -165,12 +192,19 @@ export function FixPlanPanel({
             }}
             disabled={isDownloadDisabled}
             onClick={onDownload}
+            title={isZipUnavailable ? "프로젝트 ZIP으로 업로드했을 때만 사용할 수 있습니다." : undefined}
           >
             <Download size={16} />
             {isDownloading ? "생성 중" : "수정된 ZIP 다운로드"}
           </button>
         </div>
       </div>
+      {isZipUnavailable && (
+        <p style={{ ...styles.sectionDescription, margin: "0 0 14px" }}>
+          수정된 ZIP 다운로드는 프로젝트를 ZIP으로 업로드했을 때 지원됩니다. 파일 하나만 올린 경우에는
+          아래 수정안을 참고해 직접 버전을 올리거나, GitHub PR로 저장소에 바로 반영할 수 있습니다.
+        </p>
+      )}
       {isGithubModalOpen && (
         <GithubPrModal fileSeq={fileSeq} onClose={() => setIsGithubModalOpen(false)} />
       )}

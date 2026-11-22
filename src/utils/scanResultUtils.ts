@@ -28,7 +28,21 @@ const getSeverityCount = (counts: Record<string, number>, severity: string) =>
 export const getRiskStatus = (
   counts: Record<string, number>,
   total: number,
+  componentCount?: number,
 ) => {
+  // 구성요소를 하나도 못 찾았으면 "취약점 없음(양호)"이 아니라 검사할 대상이 없었던 것
+  if (total === 0 && componentCount === 0) {
+    return {
+      label: "확인 필요",
+      title: "분석할 구성요소를 찾지 못했습니다",
+      description:
+        "파일에서 라이브러리 정보를 찾지 못해 취약점을 검사하지 못했습니다. 프로젝트 ZIP이면 package-lock.json, requirements.txt, pom.xml 같은 의존성 파일이 들어 있는지 확인해주세요.",
+      bg: "#f8fafc",
+      border: "#cbd5e1",
+      color: "#475569",
+    };
+  }
+
   if (total === 0) {
     return {
       label: "양호",
@@ -102,11 +116,56 @@ export const getFixGuide = (item: ScanResult) => {
   }
 };
 
+export const isKnownExploited = (item: ScanResult) => item.kevYn === "Y";
+
+// 같은 심각도 안에서는 실제 악용 중(KEV) → CVSS 점수 높은 순
 export const sortBySeverity = (results: ScanResult[]) =>
   [...results].sort(
     (a, b) =>
-      (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99),
+      (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99) ||
+      Number(isKnownExploited(b)) - Number(isKnownExploited(a)) ||
+      (b.cvssScore ?? -1) - (a.cvssScore ?? -1),
   );
+
+// CVSS 점수 → 등급 (CVSS v3·v4 공통 구간: 9.0+ Critical, 7.0+ High, 4.0+ Medium, 0.1+ Low)
+export const cvssSeverity = (score: number) =>
+  score >= 9 ? "Critical" : score >= 7 ? "High" : score >= 4 ? "Medium" : score > 0 ? "Low" : "Unknown";
+
+// EPSS(0~1) → 화면용 퍼센트
+export const formatEpss = (epss: number) => {
+  const pct = epss * 100;
+  if (pct >= 10) return `${pct.toFixed(0)}%`;
+  if (pct >= 1) return `${pct.toFixed(1)}%`;
+  return pct > 0 ? "1% 미만" : "0%";
+};
+
+/** 구성요소(패키지@버전) 하나에 걸린 취약점들의 위험도 요약 */
+export type ComponentRisk = {
+  maxCvss: number | null;
+  cvssVersion: string | null;
+  maxEpss: number | null;
+  kev: boolean;
+  findingCount: number;
+};
+
+export const buildComponentRiskMap = (results: ScanResult[]) => {
+  const map = new Map<string, ComponentRisk>();
+  results.forEach((item) => {
+    const key = `${item.pkgName}@${item.pkgVersion ?? ""}`;
+    const risk = map.get(key) ?? { maxCvss: null, cvssVersion: null, maxEpss: null, kev: false, findingCount: 0 };
+    risk.findingCount += 1;
+    if (item.cvssScore != null && (risk.maxCvss == null || item.cvssScore > risk.maxCvss)) {
+      risk.maxCvss = item.cvssScore;
+      risk.cvssVersion = item.cvssVersion ?? null;
+    }
+    if (item.epssScore != null && (risk.maxEpss == null || item.epssScore > risk.maxEpss)) {
+      risk.maxEpss = item.epssScore;
+    }
+    if (isKnownExploited(item)) risk.kev = true;
+    map.set(key, risk);
+  });
+  return map;
+};
 
 export const countBySeverity = (results: ScanResult[]) =>
   results.reduce<Record<string, number>>((acc, item) => {

@@ -60,12 +60,12 @@ export default function FileUploadScreen() {
         }
       }
 
-      // 1개면 해당 파일 로딩 화면으로, 여러 개면 히스토리에서 한 번에 확인
+      // 1개면 해당 파일 로딩 화면으로, 여러 개면 파일별 진행 상황을 한 화면에서 보여주는 로딩 화면으로
+      // (모두 끝나면 그 화면이 분석 히스토리로 이동시킨다)
       if (uploadedSeqs.length === 1) {
         navigate(`/scan-loading/${uploadedSeqs[0]}`);
       } else if (uploadedSeqs.length > 1) {
-        alert(`${uploadedSeqs.length}개 파일 업로드 완료. 분석 히스토리에서 결과를 확인하세요.`);
-        navigate("/history");
+        navigate(`/scan-loading?seqs=${uploadedSeqs.join(",")}`);
       }
     } finally {
       setIsUploading(false);
@@ -76,7 +76,7 @@ export default function FileUploadScreen() {
     mode === "file"
       ? [
           "ZIP으로 올리면 구성요소를 자동으로 추출하고, 수정 버전이 있는 npm·Maven 패키지는 자동 수정 ZIP을 받을 수 있습니다.",
-          "파일을 여러 개 올리면 모두 업로드한 뒤 분석 히스토리에서 결과를 한 번에 확인합니다.",
+          "파일을 여러 개 올리면 파일별 분석 진행 상황을 한 화면에서 보여주고, 모두 끝나면 분석 히스토리로 이동합니다.",
         ]
       : [
           "자동 수정 PR은 분석한 저장소로만 만들어져, 다른 프로젝트의 버전을 잘못 덮어쓰지 않습니다.",

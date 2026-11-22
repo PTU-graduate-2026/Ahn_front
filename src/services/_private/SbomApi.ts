@@ -13,6 +13,14 @@ export type ScanResult = {
   severity: string;
   fixedVer?: string;
   scanDt?: string;
+  /** CVSS 기본 점수(0~10). 예전 분석 기록은 null (모니터링 재검사 때 채워짐) */
+  cvssScore?: number | null;
+  /** 위 점수의 CVSS 버전 (3.1, 4.0 등) */
+  cvssVersion?: string | null;
+  /** EPSS: 앞으로 30일 안에 실제로 악용될 확률 (0~1) */
+  epssScore?: number | null;
+  /** CISA KEV(실제 악용 중) 등록 여부 "Y" / "N" */
+  kevYn?: string | null;
 };
 
 export type SbomComponent = {
@@ -161,6 +169,14 @@ export const downloadFixedZip = async (fileSeq: string | number) => {
     timeout: 300000,
   });
   return response;
+};
+
+// 결과 화면에서 만든 PDF 보고서를 첨부해 로그인한 본인 이메일로 보냄 (받는 주소는 서버가 세션으로 정함)
+export const sendReportMail = async (fileSeq: string | number, report: Blob) => {
+  const form = new FormData();
+  form.append("report", report, `zerocheck-report-${fileSeq}.pdf`);
+  const response = await axiosInstance.post(`/files/${fileSeq}/report-mail`, form);
+  return response.data as { success: boolean; message: string; data?: { to: string } };
 };
 
 export const getFileHistory = async () => {

@@ -11,7 +11,47 @@ type Props = {
 };
 
 // accept와 맞춘 안내 칩 (형식 추가하면 같이 수정)
-const formats = ["SPDX", "CycloneDX", "JSON · XML · YAML", "ZIP"];
+const formats = ["SPDX", "CycloneDX", "JSON · XML · YAML", "의존성 파일", "ZIP"];
+
+// 백엔드 DependencyFileDetector와 같은 목록 (SBOM 없이 단독으로 분석 가능한 의존성 파일)
+const DEPENDENCY_FILE_NAMES = new Set([
+  "package-lock.json",
+  "npm-shrinkwrap.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "pipfile.lock",
+  "poetry.lock",
+  "pom.xml",
+  "gradle.lockfile",
+  "go.mod",
+  "cargo.lock",
+  "gemfile.lock",
+  "composer.lock",
+]);
+
+// 브라우저 파일 선택창은 확장자로만 거를 수 있어서 의존성 파일 확장자도 넣는다.
+// (.txt처럼 넓은 확장자는 서버가 파일명으로 한 번 더 검사)
+const DEFAULT_ACCEPT = [
+  ".json,.xml,.spdx,.cdx,.yaml,.yml,.zip",
+  ".lock,.lockfile,.mod,.txt,.jar,.war,.ear",
+].join(",");
+
+type FileKind = "zip" | "dependency" | "sbom";
+
+const fileKindOf = (name: string): FileKind => {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".zip")) return "zip";
+  if (DEPENDENCY_FILE_NAMES.has(lower)) return "dependency";
+  if (lower.endsWith(".txt") && lower.includes("requirements")) return "dependency";
+  if (/\.(jar|war|ear)$/.test(lower)) return "dependency";
+  return "sbom";
+};
+
+const FILE_KIND_LABEL: Record<FileKind, string> = {
+  zip: "프로젝트 압축",
+  dependency: "의존성 파일",
+  sbom: "SBOM",
+};
 
 const formatSize = (size: number) => {
   if (size < 1024) return `${size} B`;
@@ -20,7 +60,7 @@ const formatSize = (size: number) => {
 };
 
 export default function FileInputBox({
-  accept = ".json,.xml,.spdx,.cdx,.yaml,.yml,.zip",
+  accept = DEFAULT_ACCEPT,
   multiple = true,
   isUploading = false,
   onFilesChange,
@@ -110,7 +150,10 @@ export default function FileInputBox({
         <div style={s.dropTitle}>
           {isDragging ? "여기에 놓으면 추가됩니다" : "파일을 끌어다 놓거나 클릭해서 선택하세요"}
         </div>
-        <div style={s.dropHelper}>SBOM 파일 또는 프로젝트 압축 파일 · 여러 개 선택 가능</div>
+        <div style={s.dropHelper}>
+          SBOM 파일, 의존성 파일(package-lock.json · requirements.txt · pom.xml 등) 또는 프로젝트
+          압축 파일 · 여러 개 선택 가능
+        </div>
         <button
           type="button"
           style={s.pickButton}
@@ -151,7 +194,8 @@ export default function FileInputBox({
           <div style={s.fileList}>
             {files.map((f, idx) => {
               const isLast = idx === files.length - 1;
-              const isZip = f.name.toLowerCase().endsWith(".zip");
+              const kind = fileKindOf(f.name);
+              const isZip = kind === "zip";
               return (
                 <div
                   key={`${f.name}-${f.size}-${idx}`}
@@ -163,7 +207,7 @@ export default function FileInputBox({
                       {f.name}
                     </div>
                     <div style={s.fileSize}>
-                      {formatSize(f.size)} · {isZip ? "프로젝트 압축" : "SBOM"}
+                      {formatSize(f.size)} · {FILE_KIND_LABEL[kind]}
                     </div>
                   </div>
 

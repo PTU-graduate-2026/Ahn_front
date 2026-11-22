@@ -7,7 +7,7 @@ type Chip = { label: string; tone?: string };
 // 이용 단계 — 실제 화면 흐름(업로드 → 분석 → 판정 → 조치) 기준
 const steps: { title: string; desc: string; outLabel: string; out: Chip[] }[] = [
   {
-    title: "파일을 올리거나 저장소를 고릅니다",
+    title: "파일 업로드 / 저장소 선택",
     desc: "SBOM 파일이나 프로젝트 ZIP을 끌어다 놓거나, GitHub 탭에서 토큰을 입력하고 분석할 저장소를 선택합니다.",
     outLabel: "입력",
     out: [
@@ -19,7 +19,7 @@ const steps: { title: string; desc: string; outLabel: string; out: Chip[] }[] = 
     ],
   },
   {
-    title: "구성요소를 추출하고 취약점을 찾습니다",
+    title: "구성요소 추출 후 취약점을 분석",
     desc: "프로젝트에 들어 있는 오픈소스 패키지와 버전을 추출하고, 알려진 취약점(CVE)과 하나씩 비교합니다.",
     outLabel: "찾아내는 것",
     out: [
@@ -32,7 +32,7 @@ const steps: { title: string; desc: string; outLabel: string; out: Chip[] }[] = 
     ],
   },
   {
-    title: "배포해도 되는지 판정합니다",
+    title: "배포가능 여부 판정",
     desc: "발견된 취약점의 심각도를 기준으로 PASS, REVIEW, BLOCK 중 하나로 판정합니다.",
     outLabel: "판정",
     out: [
@@ -42,7 +42,7 @@ const steps: { title: string; desc: string; outLabel: string; out: Chip[] }[] = 
     ],
   },
   {
-    title: "고치고 다시 확인합니다",
+    title: "수정 후 재분석",
     desc: "수정 버전이 있는 npm 패키지는 버전을 올린 ZIP을 받거나 GitHub에 PR로 올립니다. 저장소는 PR 반영 후 다시 분석해 이전 결과와 비교할 수 있습니다.",
     outLabel: "받는 것",
     out: [{ label: "수정 ZIP" }, { label: "GitHub PR" }, { label: "PDF 보고서" }],
@@ -94,8 +94,7 @@ export default function Process() {
     <section id="stages" className="intro-stages">
       <div className="intro-inner">
         <div className="intro-head">
-          <h2>업로드부터 수정까지 네 단계</h2>
-          <p>각 단계가 끝나면 무엇을 받게 되는지 함께 정리했습니다.</p>
+          <h2>업로드부터 수정까지 4단계</h2>
         </div>
 
         <div ref={trackRef} className="intro-track">

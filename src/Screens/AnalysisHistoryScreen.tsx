@@ -264,6 +264,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   analyzingChip: { background: "#dbeafe", color: "#1d4ed8" },
   failedChip: { background: "#fee2e2", color: "#991b1b" },
+  emptyChip: { background: "#f1f5f9", color: "#475569" },
 
   legend: {
     display: "flex",
@@ -398,10 +399,14 @@ const getPolicyChipStyle = (decision?: string) => {
   return {};
 };
 
-// 분석이 끝나지 않은 파일만 상태 칩 표시
-const getStatusChip = (status?: string) => {
-  if (status === "ANALYZING") return { label: "분석 중", style: styles.analyzingChip };
-  if (status === "FAILED") return { label: "실패", style: styles.failedChip };
+// 분석이 끝나지 않았거나, 끝났지만 구성요소를 못 찾은 파일만 상태 칩 표시
+// (구성요소 0개 + 취약점 0건은 "발견 없음"이 아니라 검사할 대상이 없었던 것)
+const getStatusChip = (item: FileHistoryItem) => {
+  if (item.status === "ANALYZING") return { label: "분석 중", style: styles.analyzingChip };
+  if (item.status === "FAILED") return { label: "실패", style: styles.failedChip };
+  if ((item.componentCount ?? 0) === 0 && (item.totalFindings ?? 0) === 0) {
+    return { label: "구성요소 없음", style: styles.emptyChip };
+  }
   return null;
 };
 
@@ -495,6 +500,33 @@ export default function AnalysisHistoryScreen() {
       mounted = false;
     };
   }, []);
+
+  // 분석 중인 파일이 있으면 3초마다 조용히(로딩 표시 없이) 목록을 다시 불러와서,
+  // 새로고침하지 않아도 "분석 중"이 완료/실패로 바뀐다. 분석 중인 파일이 없으면 멈춘다.
+  const hasAnalyzing = items.some((item) => item.status === "ANALYZING");
+  const [pollTick, setPollTick] = useState(0);
+
+  useEffect(() => {
+    if (!hasAnalyzing) return;
+    let cancelled = false;
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        const response = await getFileHistory();
+        const history = response?.data?.files ?? response?.data ?? [];
+        if (!cancelled && Array.isArray(history)) setItems(history);
+      } catch {
+        // 일시적인 오류는 무시하고 다음 주기에 다시 시도한다
+      } finally {
+        if (!cancelled) setPollTick((tick) => tick + 1);
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
+  }, [hasAnalyzing, pollTick]);
 
   // 탭마다 몇 건인지 (검색어는 반영, 정책 필터는 반영 안 함)
   const searchedItems = useMemo(() => {
@@ -633,7 +665,7 @@ export default function AnalysisHistoryScreen() {
           </thead>
           <tbody>
             {visibleItems.map((item) => {
-              const statusChip = getStatusChip(item.status);
+              const statusChip = getStatusChip(item);
               const total = item.totalFindings ?? 0;
               const selectable = isSelectable(item);
               const isSelected = selectable && selectedSeqs.has(item.fileSeq);
